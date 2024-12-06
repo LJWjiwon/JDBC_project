@@ -101,7 +101,36 @@ public class RestaurantApp extends JFrame {
         JTable reviewTable = new JTable(reviewModel);
         JScrollPane reviewScrollPane = new JScrollPane(reviewTable);
         reviewPanel.add(reviewScrollPane, BorderLayout.CENTER);
-        reviewPanel.add(addButtonsPanel("리뷰"), BorderLayout.SOUTH);
+
+        // 리뷰 내용 표시 영역 (JTextArea)
+        JPanel reviewDetailPanel = new JPanel();
+        reviewDetailPanel.setLayout(new BorderLayout());
+
+        // 텍스트 영역 생성 (길어도 내용 표시 가능)
+        JTextArea reviewDetailsArea = new JTextArea(10, 30);
+        reviewDetailsArea.setEditable(false); // 내용 수정 불가
+        reviewDetailsArea.setLineWrap(true); // 줄 바꿈 허용
+        reviewDetailsArea.setWrapStyleWord(true); // 단어 단위로 줄 바꿈
+
+        // 세로 스크롤을 위한 JScrollPane 추가
+        JScrollPane reviewDetailsScrollPane = new JScrollPane(reviewDetailsArea);
+        reviewDetailsScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);  // 세로 스크롤 항상 표시
+
+        // 리뷰 내용 텍스트 영역을 패널에 추가
+        reviewDetailPanel.add(reviewDetailsScrollPane, BorderLayout.CENTER);
+        reviewPanel.add(reviewDetailPanel, BorderLayout.EAST);
+
+
+        // 버튼 추가 영역
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JButton button1 = new JButton("수정");
+        JButton button2 = new JButton("삭제");
+        buttonPanel.add(button1);
+        buttonPanel.add(button2);
+
+        // 버튼 패널을 reviewPanel의 아래쪽에 추가
+        reviewPanel.add(buttonPanel, BorderLayout.SOUTH);  // 버튼이 아래쪽에 보이게
+
 
         // 전체 메뉴 탭
         JPanel allMenuPanel = new JPanel(new BorderLayout());
@@ -152,6 +181,20 @@ public class RestaurantApp extends JFrame {
                         int orderId = (int) orderModel.getValueAt(selectedRow, 0);
                         loadOrderDetailData(orderId); // 선택한 주문 ID에 해당하는 주문 상세 데이터 로드
                     }
+                }
+            }
+        });
+
+        // 리뷰 테이블의 선택 이벤트 추가
+        reviewTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                int selectedRow = reviewTable.getSelectedRow();
+                if (selectedRow != -1) {
+                    // 선택된 리뷰의 ID와 내용을 JTextArea에 표시
+                    String reviewId = reviewModel.getValueAt(selectedRow, 0).toString();
+                    String reviewContent = reviewModel.getValueAt(selectedRow, 7).toString();
+                    reviewDetailsArea.setText("리뷰 ID: " + reviewId + "\n\n리뷰 내용: " + reviewContent);
                 }
             }
         });

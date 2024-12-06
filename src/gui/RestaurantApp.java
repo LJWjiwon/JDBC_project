@@ -152,13 +152,12 @@ public class RestaurantApp extends JFrame {
         add(tabbedPane, BorderLayout.CENTER);
 
         // 데이터 로드
-        loadRestaurantData();
-        loadMenuData();
-        loadCustomerData();
-        loadDeliveryData();
-        loadOrderData();
-        loadReviewData();
-        loadAllMenuData(); // 전체 메뉴 데이터 로드
+        dbConn.loadRestaurantData(restaurantModel);
+        dbConn.loadCustomerData(customerModel);
+        dbConn.loadDeliveryData(deliveryModel);
+        dbConn.loadOrderData(orderModel);
+        dbConn.loadReviewData(reviewModel);
+        dbConn.loadAllMenuData(allMenuModel); // 전체 메뉴 데이터 로드
 
         // 음식점 선택 시 메뉴 데이터 로드
         restaurantTable.getSelectionModel().addListSelectionListener(e -> {
@@ -166,7 +165,7 @@ public class RestaurantApp extends JFrame {
                 int selectedRow = restaurantTable.getSelectedRow();
                 if (selectedRow != -1) {
                     int restaurantId = (int) restaurantModel.getValueAt(selectedRow, 0);
-                    loadMenuDataForRestaurant(restaurantId);
+                    dbConn.loadMenuDataForRestaurant(restaurantId, menuModel);
                 }
             }
         });
@@ -179,7 +178,7 @@ public class RestaurantApp extends JFrame {
                     int selectedRow = orderTable.getSelectedRow();
                     if (selectedRow != -1) {
                         int orderId = (int) orderModel.getValueAt(selectedRow, 0);
-                        loadOrderDetailData(orderId); // 선택한 주문 ID에 해당하는 주문 상세 데이터 로드
+                        dbConn.loadOrderDetailData(orderId, orderDetailModel); // 선택한 주문 ID에 해당하는 주문 상세 데이터 로드
                     }
                 }
             }
@@ -200,182 +199,7 @@ public class RestaurantApp extends JFrame {
         });
     }
 
-    // 전체 메뉴 데이터 로드
-    private void loadAllMenuData() {
-        String query = "SELECT * FROM menu";
-        try (Connection con = dbConn.DB_Connect(); Statement stmt = con.createStatement(); ResultSet rs = stmt.executeQuery(query)) {
-            allMenuModel.setRowCount(0);
-            while (rs.next()) {
-                allMenuModel.addRow(new Object[]{
-                        rs.getInt("menu_id"),
-                        rs.getInt("restaurant_id"),
-                        rs.getString("name"),
-                        rs.getFloat("price"),
-                        rs.getString("description")
-                });
-            }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "전체 메뉴 데이터 로드 실패: " + e.getMessage());
-        }
-    }
-
-    // 주문 상세 데이터 로드
-    private void loadOrderDetailData(int orderId) {
-        String query = "SELECT * FROM order_details WHERE order_id = " + orderId;
-        try (Connection con = dbConn.DB_Connect(); Statement stmt = con.createStatement(); ResultSet rs = stmt.executeQuery(query)) {
-            orderDetailModel.setRowCount(0);  // 이전 데이터 제거
-            while (rs.next()) {
-                orderDetailModel.addRow(new Object[]{
-                        rs.getInt("order_detail_id"),
-                        rs.getInt("order_id"),
-                        rs.getInt("menu_id"),
-                        rs.getInt("quantity"),
-                        rs.getFloat("subtotal")
-                });
-            }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "주문 상세 정보 로드 실패: " + e.getMessage());
-        }
-    }
-
-    // 선택된 음식점에 맞는 메뉴 데이터 로드
-    private void loadMenuDataForRestaurant(int restaurantId) {
-        String query = "SELECT * FROM menu WHERE restaurant_id = " + restaurantId;
-        try (Connection con = dbConn.DB_Connect(); Statement stmt = con.createStatement(); ResultSet rs = stmt.executeQuery(query)) {
-            menuModel.setRowCount(0);  // 기존 메뉴 데이터 제거
-            while (rs.next()) {
-                menuModel.addRow(new Object[]{
-                        false,  // 체크박스를 기본값으로 체크 안 되게 설정
-                        rs.getString("name"),
-                        rs.getFloat("price"),
-                        rs.getString("description")
-                });
-            }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "메뉴 데이터 로드 실패: " + e.getMessage());
-        }
-    }
-
-    // 음식점 데이터 로드
-    private void loadRestaurantData() {
-        String query = "SELECT * FROM restaurant";
-        try (Connection con = dbConn.DB_Connect(); Statement stmt = con.createStatement(); ResultSet rs = stmt.executeQuery(query)) {
-            restaurantModel.setRowCount(0);
-            while (rs.next()) {
-                restaurantModel.addRow(new Object[]{
-                        rs.getInt("restaurant_id"),
-                        rs.getString("name"),
-                        rs.getString("address"),
-                        rs.getString("phone_number"),
-                        rs.getString("business_hours"),
-                        rs.getFloat("restaurant_rating")
-                });
-            }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "음식점 데이터 로드 실패: " + e.getMessage());
-        }
-    }
-
-    // 메뉴 데이터 로드 (전체 메뉴)
-    private void loadMenuData() {
-        String query = "SELECT * FROM menu";
-        try (Connection con = dbConn.DB_Connect(); Statement stmt = con.createStatement(); ResultSet rs = stmt.executeQuery(query)) {
-            menuModel.setRowCount(0);
-            while (rs.next()) {
-                menuModel.addRow(new Object[]{
-                        false,  // 체크박스를 기본값으로 체크 안 되게 설정
-                        rs.getString("name"),
-                        rs.getFloat("price"),
-                        rs.getString("description")
-                });
-            }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "메뉴 데이터 로드 실패: " + e.getMessage());
-        }
-    }
-
-    // 고객 데이터 로드
-    private void loadCustomerData() {
-        String query = "SELECT * FROM customer";
-        try (Connection con = dbConn.DB_Connect(); Statement stmt = con.createStatement(); ResultSet rs = stmt.executeQuery(query)) {
-            customerModel.setRowCount(0);
-            while (rs.next()) {
-                customerModel.addRow(new Object[]{
-                        rs.getInt("customer_id"),
-                        rs.getString("name"),
-                        rs.getString("phone_number"),
-                        rs.getString("address"),
-                        rs.getInt("order_count"),
-                        rs.getString("membership_grade")
-                });
-            }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "고객 데이터 로드 실패: " + e.getMessage());
-        }
-    }
-
-    // 배달원 데이터 로드
-    private void loadDeliveryData() {
-        String query = "SELECT * FROM delivery_person";
-        try (Connection con = dbConn.DB_Connect(); Statement stmt = con.createStatement(); ResultSet rs = stmt.executeQuery(query)) {
-            deliveryModel.setRowCount(0);
-            while (rs.next()) {
-                deliveryModel.addRow(new Object[]{
-                        rs.getInt("delivery_person_id"),
-                        rs.getString("name"),
-                        rs.getString("phone_number"),
-                        rs.getFloat("delivery_person_rating")
-                });
-            }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "배달원 데이터 로드 실패: " + e.getMessage());
-        }
-    }
-
-    // 주문 데이터 로드
-    private void loadOrderData() {
-        String query = "SELECT * FROM orders";
-        try (Connection con = dbConn.DB_Connect(); Statement stmt = con.createStatement(); ResultSet rs = stmt.executeQuery(query)) {
-            orderModel.setRowCount(0);
-            while (rs.next()) {
-                orderModel.addRow(new Object[]{
-                        rs.getInt("order_id"),
-                        rs.getInt("customer_id"),
-                        rs.getInt("restaurant_id"),
-                        rs.getString("order_date"),
-                        rs.getFloat("total_price"),
-                        rs.getInt("delivery_person_id"),
-                        rs.getString("status")
-                });
-            }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "주문 데이터 로드 실패: " + e.getMessage());
-        }
-    }
-
-    // 리뷰 데이터 로드
-    private void loadReviewData() {
-        String query = "SELECT * FROM review";
-        try (Connection con = dbConn.DB_Connect(); Statement stmt = con.createStatement(); ResultSet rs = stmt.executeQuery(query)) {
-            reviewModel.setRowCount(0);
-            while (rs.next()) {
-                reviewModel.addRow(new Object[]{
-                        rs.getInt("review_id"),
-                        rs.getInt("order_id"),
-                        rs.getInt("customer_id"),
-                        rs.getInt("restaurant_id"),
-                        rs.getInt("delivery_person_id"),
-                        rs.getFloat("restaurant_rating"),
-                        rs.getFloat("delivery_person_rating"),
-                        rs.getString("review_content")
-                });
-            }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "리뷰 데이터 로드 실패: " + e.getMessage());
-        }
-    }
-
-    // 패널 하단에 버튼을 추가하기 위한 메서드 (수정)
+    // 패널 하단에 버튼을 추가하기 위한 메서드
     private JPanel addButtonsPanel(String tabName) {
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
 

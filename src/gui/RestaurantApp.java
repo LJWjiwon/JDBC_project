@@ -12,7 +12,7 @@ import java.sql.*;
 
 public class RestaurantApp extends JFrame {
     private JTabbedPane tabbedPane;
-    private DefaultTableModel restaurantModel, menuModel, customerModel, deliveryModel, orderModel, reviewModel, orderDetailModel;
+    private DefaultTableModel restaurantModel, menuModel, customerModel, deliveryModel, orderModel, reviewModel, orderDetailModel, allMenuModel;
 
     private final DB_Conn_Query dbConn;
 
@@ -74,7 +74,6 @@ public class RestaurantApp extends JFrame {
         deliveryPanel.add(deliveryScrollPane, BorderLayout.CENTER);
         deliveryPanel.add(addButtonsPanel("배달원"), BorderLayout.SOUTH);
 
-
         // 주문 탭 추가
         JPanel orderPanel = new JPanel(new BorderLayout());
         orderModel = new DefaultTableModel();
@@ -104,8 +103,18 @@ public class RestaurantApp extends JFrame {
         reviewPanel.add(reviewScrollPane, BorderLayout.CENTER);
         reviewPanel.add(addButtonsPanel("리뷰"), BorderLayout.SOUTH);
 
+        // 전체 메뉴 탭
+        JPanel allMenuPanel = new JPanel(new BorderLayout());
+        allMenuModel = new DefaultTableModel();
+        allMenuModel.setColumnIdentifiers(new Object[]{"메뉴 ID", "음식점 ID", "메뉴 이름", "가격", "설명"});
+        JTable allMenuTable = new JTable(allMenuModel);
+        JScrollPane allMenuScrollPane = new JScrollPane(allMenuTable);
+        allMenuPanel.add(allMenuScrollPane, BorderLayout.CENTER);
+        allMenuPanel.add(addButtonsPanel("전체 메뉴"), BorderLayout.SOUTH);
+
         // 탭 추가
         tabbedPane.addTab("음식점", restaurantPanel);
+        tabbedPane.addTab("전체 메뉴", allMenuPanel);
         tabbedPane.addTab("고객", customerPanel);
         tabbedPane.addTab("배달원", deliveryPanel);
         tabbedPane.addTab("주문", orderPanel);
@@ -120,6 +129,7 @@ public class RestaurantApp extends JFrame {
         loadDeliveryData();
         loadOrderData();
         loadReviewData();
+        loadAllMenuData(); // 전체 메뉴 데이터 로드
 
         // 음식점 선택 시 메뉴 데이터 로드
         restaurantTable.getSelectionModel().addListSelectionListener(e -> {
@@ -147,6 +157,25 @@ public class RestaurantApp extends JFrame {
         });
     }
 
+    // 전체 메뉴 데이터 로드
+    private void loadAllMenuData() {
+        String query = "SELECT * FROM menu";
+        try (Connection con = dbConn.DB_Connect(); Statement stmt = con.createStatement(); ResultSet rs = stmt.executeQuery(query)) {
+            allMenuModel.setRowCount(0);
+            while (rs.next()) {
+                allMenuModel.addRow(new Object[]{
+                        rs.getInt("menu_id"),
+                        rs.getInt("restaurant_id"),
+                        rs.getString("name"),
+                        rs.getFloat("price"),
+                        rs.getString("description")
+                });
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "전체 메뉴 데이터 로드 실패: " + e.getMessage());
+        }
+    }
+
     // 주문 상세 데이터 로드
     private void loadOrderDetailData(int orderId) {
         String query = "SELECT * FROM order_details WHERE order_id = " + orderId;
@@ -165,8 +194,6 @@ public class RestaurantApp extends JFrame {
             JOptionPane.showMessageDialog(this, "주문 상세 정보 로드 실패: " + e.getMessage());
         }
     }
-
-
 
     // 선택된 음식점에 맞는 메뉴 데이터 로드
     private void loadMenuDataForRestaurant(int restaurantId) {
@@ -368,6 +395,9 @@ public class RestaurantApp extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new RestaurantApp().setVisible(true));
+        SwingUtilities.invokeLater(() -> {
+            RestaurantApp app = new RestaurantApp();
+            app.setVisible(true);
+        });
     }
 }

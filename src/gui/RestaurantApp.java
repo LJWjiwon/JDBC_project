@@ -379,10 +379,22 @@ public class RestaurantApp extends JFrame {
 
             // 고객 탭 버튼 클릭 이벤트
             updateMembershipButton.addActionListener(e -> JOptionPane.showMessageDialog(this, "회원 등급 업데이트 버튼 클릭"));
+        } else if ("주문".equals(tabName)) {
+            JButton writeReviewBtn = new JButton("리뷰 작성");
+
+            // 주문 탭 전용 버튼 추가
+            buttonPanel.add(writeReviewBtn);
+
+            // 주문 탭 버튼 클릭 이벤트
+            writeReviewBtn.addActionListener(e -> JOptionPane.showMessageDialog(this, "리뷰 작성 버튼 클릭"));
+        }
+
+        // 공통 버튼 추가 (주문/리뷰 탭에서는 추가 버튼이 안 보임)
+        if (!"주문".equals(tabName) && !"리뷰".equals(tabName)) {
+            buttonPanel.add(addButton);
         }
 
         // 공통 버튼 추가
-        buttonPanel.add(addButton);
         buttonPanel.add(editButton);
         buttonPanel.add(deleteButton);
 

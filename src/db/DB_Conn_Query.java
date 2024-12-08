@@ -52,27 +52,6 @@ public class DB_Conn_Query {
         }
     }
 
-//    // 메뉴 데이터 로드
-//    public void loadMenuData(DefaultTableModel menuModel) {
-//        String query = "SELECT * FROM menu"; // 메뉴 데이터를 가져오는 SQL 쿼리
-//        try (Connection conn = this.DB_Connect();
-//             Statement stmt = conn.createStatement();
-//             ResultSet rs = stmt.executeQuery(query)) {
-//
-//            while (rs.next()) {
-//                Object[] row = {
-//                        false, // 기본값, 체크박스를 위한 값
-//                        rs.getString("name"),
-//                        rs.getFloat("price"),
-//                        rs.getString("description")
-//                };
-//                menuModel.addRow(row);
-//            }
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//        }
-//    }
-
     // 특정 음식점의 메뉴 데이터 로드
     public void loadMenuDataForRestaurant(int restaurantId, DefaultTableModel menuModel) {
         String query = "SELECT * FROM menu WHERE restaurant_id = ?";
@@ -239,6 +218,69 @@ public class DB_Conn_Query {
             e.printStackTrace();
         }
     }
+
+    // 프로시저 호출하여 best_menu 업데이트
+    public void updateBestMenu(int restaurantId) {
+        CallableStatement stmt = null;
+        try {
+            Connection con = this.DB_Connect();
+            // 프로시저 호출
+            String sql = "{ call update_best_menu(?) }";
+            stmt = con.prepareCall(sql);
+
+            // 파라미터 설정
+            stmt.setLong(1, restaurantId);  // setInt 대신 setLong 사용
+
+            // 프로시저 실행
+            stmt.execute();
+            System.out.println("Best menu for restaurant ID " + restaurantId + " has been updated.");
+
+        } catch (SQLException e) {
+            // 예외 메시지 출력
+            System.out.println("Error occurred while updating best menu: " + e.getMessage());
+            e.printStackTrace();  // 스택 트레이스를 출력하여 오류 원인 파악
+        } finally {
+            try {
+                if (stmt != null) {
+                    stmt.close();
+                }
+            } catch (SQLException e) {
+                System.out.println("Error while closing CallableStatement: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+    }
+
+    // 해당 음식점의 가장 인기 있는 메뉴 반환
+    public String getBestMenuForRestaurant(int restaurantId) {
+        String bestMenu = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            String sql = "SELECT best_menu FROM restaurant WHERE restaurant_ID = ?";
+            stmt = con.prepareStatement(sql);
+            stmt.setInt(1, restaurantId);
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                bestMenu = rs.getString("best_menu");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+                if (stmt != null) {
+                    stmt.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return bestMenu;
+    }
+
 
 
 

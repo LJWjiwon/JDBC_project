@@ -34,6 +34,18 @@ public class RestaurantApp extends JFrame {
         restaurantPanel.add(restaurantScrollPane, BorderLayout.CENTER);
         restaurantPanel.add(addButtonsPanel("음식점"), BorderLayout.SOUTH);
 
+
+        // 'Best Menu' 레이블 초기화
+        JLabel bestMenuLabel = new JLabel("Best Menu: ");
+        bestMenuLabel.setFont(new Font("나눔고딕", Font.BOLD, 16));
+        bestMenuLabel.setForeground(Color.RED);
+
+        // bestMenuLabel을 포함할 JPanel 생성
+        JPanel labelPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));  // 가운데 정렬
+        labelPanel.add(bestMenuLabel);
+        labelPanel.add(bestMenuLabel);
+        restaurantPanel.add(labelPanel, BorderLayout.NORTH);
+
         // 메뉴 탭
         JPanel menuPanel = new JPanel(new BorderLayout());
         menuModel = new DefaultTableModel();
@@ -166,9 +178,25 @@ public class RestaurantApp extends JFrame {
                 if (selectedRow != -1) {
                     int restaurantId = (int) restaurantModel.getValueAt(selectedRow, 0);
                     dbConn.loadMenuDataForRestaurant(restaurantId, menuModel);
+
+                    // 1. DB에서 best_menu 업데이트
+                    dbConn.updateBestMenu(restaurantId);
+
+                    // 2. 해당 음식점에 대한 가장 인기 있는 메뉴 가져오기
+                    String bestMenu = dbConn.getBestMenuForRestaurant(restaurantId);
+
+                    // "Best Menu" 레이블에 텍스트 업데이트
+                    if (bestMenu != null && !bestMenu.isEmpty()) {
+                        bestMenuLabel.setText("Best Menu: " + bestMenu);
+                    } else {
+                        bestMenuLabel.setText("Best Menu: No best menu found.");
+                    }
                 }
             }
         });
+
+
+
 
         // 주문 테이블의 행 선택 이벤트 처리
         orderTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
@@ -272,6 +300,8 @@ public class RestaurantApp extends JFrame {
 
         return buttonPanel;
     }
+
+
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {

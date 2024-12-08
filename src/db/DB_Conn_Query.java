@@ -283,77 +283,55 @@ public class DB_Conn_Query {
 
 
 
+    // 단골 고객 조회하는 메소드
+    public String findLoyalCustomers(int restaurantId, int orderCountThreshold) {
+        StringBuilder loyalCustomers = new StringBuilder();
+        ResultSet rs = null;
 
-//    private void sqlRun() throws SQLException {
-//        String query = "select restaurant.restaurant_ID, restaurant.name as restaurant_name, menu.name as menu_name from restaurant, menu where restaurant.restaurant_id = menu.restaurant_id";
-//
-//        try {
-//            this.DB_Connect();
-//            Statement stmt = this.con.createStatement();
-//            ResultSet rs = stmt.executeQuery(query);
-//
-//            while(rs.next()) {
-//                System.out.print("\t" + rs.getInt(1));
-//                System.out.print("\t" + rs.getString("restaurant_name"));
-//                System.out.print("\t" + rs.getString("menu_name") + "\n");
-//            }
-//
-//            stmt.close();
-//            rs.close();
-//        } catch (SQLException var7) {
-//            SQLException e;
-//            e = var7;
-//            e.printStackTrace();
-//        } finally {
-//            this.con.close();
-//        }
-//
-//    }
+        try {
+            Connection con = this.DB_Connect();
 
-//    private void sqlRun2_callable() {
-//        try {
-//            this.DB_Connect();
-//            CallableStatement cstmt = this.con.prepareCall("{call SP_우수고객(?, ?)}");
-//            cstmt.setInt(1, 2000);
-//            cstmt.registerOutParameter(2, 4);
-//            cstmt.executeQuery();
-//            System.out.println(cstmt.getInt(2));
-//            cstmt.close();
-//            this.con.close();
-//        } catch (SQLException var2) {
-//            SQLException e = var2;
-//            e.printStackTrace();
-//        }
-//
-//    }
-//
-//    private void sqlRun3_callable() {
-//        try {
-//            CallableStatement cstmt = this.con.prepareCall("{call SP_잠재고객(?)}");
-//            cstmt.registerOutParameter(1, -10);
-//            cstmt.executeQuery();
-//            ResultSet rs = (ResultSet)cstmt.getObject(1);
-//
-//            while(rs.next()) {
-//                PrintStream var10000 = System.out;
-//                String var10001 = rs.getString(1);
-//                var10000.println(var10001 + ",\t" + rs.getString(2));
-//            }
-//
-//            cstmt.close();
-//            rs.close();
-//            this.con.close();
-//        } catch (SQLException var3) {
-//            SQLException e = var3;
-//            e.printStackTrace();
-//        }
-//
-//    }
+            // 단골 고객 조회 쿼리
+            String query = "SELECT c.customer_ID, c.name, COUNT(o.order_ID) AS order_count " +
+                    "FROM orders o " +
+                    "JOIN customer c ON o.customer_ID = c.customer_ID " +
+                    "WHERE o.restaurant_ID = ? " +
+                    "GROUP BY c.customer_ID, c.name " +
+                    "HAVING COUNT(o.order_ID) >= ?";
+            PreparedStatement pstmt = con.prepareStatement(query);
+            pstmt.setInt(1, restaurantId);
+            pstmt.setInt(2, orderCountThreshold);
+            rs = pstmt.executeQuery();
 
-//    public static void main(String[] arg) throws SQLException {
-//        DB_Conn_Query dbconquery = new DB_Conn_Query();
-//        dbconquery.sqlRun();
-//        dbconquery.DB_Connect();
-//    }
+            // 결과 처리
+            boolean foundCustomer = false;
+            while (rs.next()) {
+                int customerId = rs.getInt("customer_ID");
+                String customerName = rs.getString("name");
+                int orderCount = rs.getInt("order_count");
 
+                loyalCustomers.append("단골 고객: " + customerName + " (고객 ID: " + customerId + ")\n");
+                loyalCustomers.append("주문 횟수: " + orderCount + " 회\n");
+                loyalCustomers.append("-----------------------------------\n");
+                foundCustomer = true;
+            }
+
+            // 고객이 없으면 메시지 출력
+            if (!foundCustomer) {
+                loyalCustomers.append("해당 조건에 맞는 단골 고객이 없습니다.");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            loyalCustomers.append("알 수 없는 오류가 발생했습니다.");
+        } finally {
+            try {
+                if (rs != null) rs.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return loyalCustomers.toString();  // 결과 반환
+    }
 }

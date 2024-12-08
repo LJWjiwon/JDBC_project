@@ -32,7 +32,7 @@ public class RestaurantApp extends JFrame {
         JTable restaurantTable = new JTable(restaurantModel);
         JScrollPane restaurantScrollPane = new JScrollPane(restaurantTable);
         restaurantPanel.add(restaurantScrollPane, BorderLayout.CENTER);
-        restaurantPanel.add(addButtonsPanel("음식점"), BorderLayout.SOUTH);
+        restaurantPanel.add(addButtonsPanel("음식점"), BorderLayout.SOUTH);    //밑에 버튼
 
 
         // 'Best Menu' 레이블 초기화
@@ -227,6 +227,7 @@ public class RestaurantApp extends JFrame {
         });
     }
 
+
     // 패널 하단에 버튼을 추가하기 위한 메서드
     private JPanel addButtonsPanel(String tabName) {
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
@@ -256,7 +257,28 @@ public class RestaurantApp extends JFrame {
 
             // 음식점 탭 버튼 클릭 이벤트 (구현 필요)
             orderButton.addActionListener(e -> JOptionPane.showMessageDialog(this, "주문 버튼 클릭"));
-            topCustomerButton.addActionListener(e -> JOptionPane.showMessageDialog(this, "단골 고객 조회 버튼 클릭"));
+
+            topCustomerButton.addActionListener(e -> {
+                // 음식점 ID를 입력받고 단골 고객 조회
+                String restaurantIdStr = JOptionPane.showInputDialog(this, "음식점 ID를 입력하세요");
+                if (restaurantIdStr != null && !restaurantIdStr.isEmpty()) {
+                    try {
+                        int restaurantId = Integer.parseInt(restaurantIdStr);
+
+                        // DBHelper에서 단골 고객 조회
+                        DB_Conn_Query dbHelper = new DB_Conn_Query();
+                        String loyalCustomers = dbHelper.findLoyalCustomers(restaurantId, 2);  // 2번 이상 주문한 고객 조회
+
+                        // 단골 고객 결과를 메시지로 출력
+                        JOptionPane.showMessageDialog(this, loyalCustomers);
+                    } catch (NumberFormatException ex) {
+                        JOptionPane.showMessageDialog(this, "유효한 음식점 ID를 입력하세요.");
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(this, "음식점 ID를 입력하세요.");
+                }
+            });
+
             topRatingButton.addActionListener(e -> JOptionPane.showMessageDialog(this, "최고 평점 조회 버튼 클릭"));
             applyDiscountButton.addActionListener(e -> {
                 try {

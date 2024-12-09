@@ -32,7 +32,13 @@ public class DB_Conn_Query {
 
     // 음식점 데이터 로드
     public void loadRestaurantData(DefaultTableModel restaurantModel) {
-        String query = "SELECT * FROM restaurant"; // 음식점 데이터를 가져오는 SQL 쿼리
+        // 기존 테이블 데이터를 모두 삭제(음식점)
+        int rowCount = restaurantModel.getRowCount();
+        for (int i = rowCount - 1; i >= 0; i--) {
+            restaurantModel.removeRow(i);
+        }
+
+        String query = "SELECT * FROM restaurant ORDER BY restaurant_id"; // 음식점 데이터를 가져오는 SQL 쿼리
         try (Connection conn = this.DB_Connect();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(query)) {
@@ -107,7 +113,13 @@ public class DB_Conn_Query {
 
     // 고객 데이터 로드
     public void loadCustomerData(DefaultTableModel customerModel) {
-        String query = "SELECT * FROM customer"; // 고객 데이터를 가져오는 SQL 쿼리
+        // 기존 테이블 데이터를 모두 삭제(고객)
+        int rowCount = customerModel.getRowCount();
+        for (int i = rowCount - 1; i >= 0; i--) {
+            customerModel.removeRow(i);
+        }
+
+        String query = "SELECT * FROM customer ORDER BY customer_id"; // 고객 데이터를 가져오는 SQL 쿼리
         try (Connection conn = this.DB_Connect();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(query)) {
@@ -130,7 +142,13 @@ public class DB_Conn_Query {
 
     // 배달원 데이터 로드
     public void loadDeliveryData(DefaultTableModel deliveryModel) {
-        String query = "SELECT * FROM delivery_person"; // 배달원 데이터를 가져오는 SQL 쿼리
+        // 기존 테이블 데이터를 모두 삭제(배달원)
+        int rowCount = deliveryModel.getRowCount();
+        for (int i = rowCount - 1; i >= 0; i--) {
+            deliveryModel.removeRow(i);
+        }
+
+        String query = "SELECT * FROM delivery_person ORDER BY delivery_person_id"; // 배달원 데이터를 가져오는 SQL 쿼리
         try (Connection conn = this.DB_Connect();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(query)) {
@@ -151,7 +169,13 @@ public class DB_Conn_Query {
 
     // 주문 데이터 로드
     public void loadOrderData(DefaultTableModel orderModel) {
-        String query = "SELECT * FROM orders"; // 주문 데이터를 가져오는 SQL 쿼리
+        // 기존 테이블 데이터를 모두 삭제(주문)
+        int rowCount = orderModel.getRowCount();
+        for (int i = rowCount - 1; i >= 0; i--) {
+            orderModel.removeRow(i);
+        }
+
+        String query = "SELECT * FROM orders ORDER BY order_id"; // 주문 데이터를 가져오는 SQL 쿼리
         try (Connection conn = this.DB_Connect();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(query)) {
@@ -175,7 +199,13 @@ public class DB_Conn_Query {
 
     // 리뷰 데이터 로드
     public void loadReviewData(DefaultTableModel reviewModel) {
-        String query = "SELECT * FROM review"; // 리뷰 데이터를 가져오는 SQL 쿼리
+        // 기존 테이블 데이터를 모두 삭제(리뷰)
+        int rowCount = reviewModel.getRowCount();
+        for (int i = rowCount - 1; i >= 0; i--) {
+            reviewModel.removeRow(i);
+        }
+
+        String query = "SELECT * FROM review ORDER BY review_id"; // 리뷰 데이터를 가져오는 SQL 쿼리
         try (Connection conn = this.DB_Connect();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(query)) {
@@ -200,7 +230,13 @@ public class DB_Conn_Query {
 
     // 전체 메뉴 데이터 로드
     public void loadAllMenuData(DefaultTableModel allMenuModel) {
-        String query = "SELECT * FROM menu"; // 모든 메뉴 데이터를 가져오는 SQL 쿼리
+        // 기존 테이블 데이터를 모두 삭제(전체 메뉴)
+        int rowCount = allMenuModel.getRowCount();
+        for (int i = rowCount - 1; i >= 0; i--) {
+            allMenuModel.removeRow(i);
+        }
+
+        String query = "SELECT * FROM menu ORDER BY menu_id"; // 모든 메뉴 데이터를 가져오는 SQL 쿼리
         try (Connection conn = this.DB_Connect();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(query)) {
@@ -334,5 +370,208 @@ public class DB_Conn_Query {
         }
 
         return loyalCustomers.toString();  // 결과 반환
+    }
+
+
+    public void saveReview(int orderId, int customerId, int restaurantId, int deliveryPersonId, double restaurantRating, double deliveryRating, String reviewContent) {
+        String sql = "SELECT MAX(review_id) FROM review";  // 최대 review_id 값을 가져오는 쿼리
+        int newReviewId = 1;  // 기본 값 설정
+
+        try (Connection conn = this.DB_Connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            if (rs.next()) {
+                // 기존 review_id 중 가장 큰 값을 가져와서 +1을 하여 새로운 review_id를 생성
+                newReviewId = rs.getInt(1) + 1;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        // 리뷰를 데이터베이스에 삽입
+        String insertSql = "INSERT INTO review (review_id, order_id, customer_id, restaurant_id, delivery_person_id, restaurant_rating, delivery_person_rating, review_content) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (Connection conn = this.DB_Connect();
+             PreparedStatement pstmt = conn.prepareStatement(insertSql)) {
+
+            // 값 설정
+            pstmt.setInt(1, newReviewId);  // 새로운 review_id
+            pstmt.setInt(2, orderId);      // 주문 ID
+            pstmt.setInt(3, customerId);   // 고객 ID
+            pstmt.setInt(4, restaurantId); // 식당 ID
+            pstmt.setInt(5, deliveryPersonId); // 배달원 ID
+            pstmt.setDouble(6, restaurantRating); // 식당 평점
+            pstmt.setDouble(7, deliveryRating); // 배달원 평점
+            pstmt.setString(8, reviewContent);  // 리뷰 내용
+
+            // 리뷰 삽입
+            int affectedRows = pstmt.executeUpdate();
+            if (affectedRows > 0) {
+                System.out.println("리뷰가 성공적으로 저장되었습니다.");
+            } else {
+                System.out.println("리뷰 저장에 실패했습니다.");
+            }
+
+            // 리뷰가 성공적으로 삽입되면 평균 평점 계산
+            updateRestaurantRating(restaurantId);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public void updateRestaurantRating(int restaurantId) {
+        String sql = "SELECT AVG(restaurant_rating) FROM review WHERE restaurant_id = ?";
+        double avgRating = 0;
+
+        try (Connection conn = this.DB_Connect()) {
+            // 자동 커밋을 비활성화하여 트랜잭션을 시작합니다.
+            conn.setAutoCommit(false);
+
+            // 1. 평균 평점 계산
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setInt(1, restaurantId);
+                ResultSet rs = pstmt.executeQuery();
+                if (rs.next()) {
+                    avgRating = rs.getDouble(1);
+                }
+
+                // 2. 음식점의 평균 평점 업데이트
+                String updateAvgRatingSql = "UPDATE restaurant SET restaurant_rating = ? WHERE restaurant_id = ?";
+                try (PreparedStatement updatePstmt = conn.prepareStatement(updateAvgRatingSql)) {
+                    updatePstmt.setDouble(1, avgRating);
+                    updatePstmt.setInt(2, restaurantId);
+                    updatePstmt.executeUpdate();
+                }
+
+                // 3. 가장 높은 평점을 가진 음식점 계산
+                String topRatedSql = "SELECT restaurant_id FROM restaurant ORDER BY restaurant_rating DESC FETCH FIRST 1 ROWS ONLY";
+                int topRatedRestaurantId = 0;
+                try (PreparedStatement topRatedPstmt = conn.prepareStatement(topRatedSql)) {
+                    ResultSet topRatedRs = topRatedPstmt.executeQuery();
+                    if (topRatedRs.next()) {
+                        topRatedRestaurantId = topRatedRs.getInt(1);
+                    }
+                }
+
+                // 4. 가장 높은 평점을 가진 음식점에 'TOP_RATED_RESTAURANT' 플래그 설정
+                String updateTopRatedFlagSql = "UPDATE restaurant SET top_rated_restaurant = ? WHERE restaurant_id = ?";
+                try (PreparedStatement updateTopRatedPstmt = conn.prepareStatement(updateTopRatedFlagSql)) {
+                    updateTopRatedPstmt.setString(1, (topRatedRestaurantId == restaurantId) ? "Y" : "N");
+                    updateTopRatedPstmt.setInt(2, restaurantId);
+                    updateTopRatedPstmt.executeUpdate();
+                }
+
+                // 5. 트랜잭션 커밋
+                conn.commit();
+                System.out.println("평점 업데이트 및 가장 높은 평점 음식점 플래그 설정 완료.");
+
+            } catch (SQLException e) {
+                conn.rollback();
+                e.printStackTrace();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // 회원 등급을 업데이트하는 메서드
+    public void updateMembershipGrade(int customerId) {
+        // 프로시저 호출 SQL
+        String sql = "{ CALL update_membership_grade(?) }";
+
+        try (Connection conn = this.DB_Connect();
+             CallableStatement cstmt = conn.prepareCall(sql)) {
+
+            // 프로시저에 고객 ID 전달
+            cstmt.setInt(1, customerId);
+
+            // 프로시저 실행
+            cstmt.execute();
+
+            System.out.println("회원 등급이 성공적으로 업데이트되었습니다.");
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("회원 등급 업데이트 중 오류가 발생했습니다.");
+        }
+    }
+
+    public void deleteCustomer(int customerId) {
+        String sql = "DELETE FROM customer WHERE customer_id = ?";
+
+        try (Connection conn = this.DB_Connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            // 삭제할 고객 ID 설정
+            pstmt.setInt(1, customerId);
+
+            // 삭제 쿼리 실행
+            int rowsAffected = pstmt.executeUpdate();
+
+            if (rowsAffected > 0) {
+                System.out.println("Customer deleted successfully.");
+            } else {
+                System.out.println("No customer found with the given ID.");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error deleting customer: " + e.getMessage());
+        }
+    }
+
+    // 고객 데이터를 데이터베이스에 저장하는 메서드
+    public void addCustomerToDatabase(String customerId,String customerName, String customerPhone, String customerAddress, String customer_order_count, String customermembership_grad) {
+        String query = "INSERT INTO customer (customer_id, name, phone_number, address, order_count,membership_grade) VALUES (?, ?, ?, ?, ?, ?)";
+
+        try (Connection conn = this.DB_Connect();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+
+            // 입력값 설정
+            pstmt.setString(1, customerId);
+            pstmt.setString(2, customerName);
+            pstmt.setString(3, customerPhone);
+            pstmt.setString(4, customerAddress);
+            pstmt.setString(5, customer_order_count);
+            pstmt.setString(6, customermembership_grad);
+
+
+            // 실행
+            pstmt.executeUpdate();
+            System.out.println("고객이 성공적으로 추가되었습니다.");
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("고객 추가 중 오류가 발생했습니다.");
+        }
+    }
+    // 주문 데이터를 `orders` 테이블에 추가하는 메서드
+    public void addOrder(int restaurantId, float totalPrice) {
+        String insertOrderQuery = "INSERT INTO orders (order_id, customer_id, restaurant_id, order_date, total_price, delivery_person_id, status) " +
+                "VALUES (order_seq_new.NEXTVAL, ?, ?, SYSDATE, ?, ?, '주문 접수')"; // '주문 접수' 상태로 설정
+
+        try (Connection conn = this.DB_Connect();
+             PreparedStatement stmt = conn.prepareStatement(insertOrderQuery)) {
+
+            // 고객 ID는 실제로 선택된 고객의 ID로 처리되어야 합니다.
+            // 예시로 1번 고객 ID를 사용 (이 부분은 실제로 구현 시, 로그인된 고객의 ID로 바꿔야 합니다)
+            int customerId = 1;  // 예시로 1번 고객 ID 설정
+            int deliveryPersonId = 1;   // 예시로 1번 배달원 ID 설정
+
+            stmt.setInt(1, customerId); // 고객 ID
+            stmt.setInt(2, restaurantId); // 음식점 ID
+            stmt.setFloat(3, totalPrice); // 총 가격
+            stmt.setInt(4, deliveryPersonId);  // 배달 담당자 ID (기본값 또는 선택된 값)
+            // 주문 추가 실행
+            stmt.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("주문 추가 중 오류 발생: " + e.getMessage());
+        }
     }
 }

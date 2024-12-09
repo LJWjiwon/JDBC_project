@@ -32,6 +32,12 @@ public class DB_Conn_Query {
 
     // 음식점 데이터 로드
     public void loadRestaurantData(DefaultTableModel restaurantModel) {
+        // 기존 테이블 데이터를 모두 삭제(음식점)
+        int rowCount = restaurantModel.getRowCount();
+        for (int i = rowCount - 1; i >= 0; i--) {
+            restaurantModel.removeRow(i);
+        }
+
         String query = "SELECT * FROM restaurant"; // 음식점 데이터를 가져오는 SQL 쿼리
         try (Connection conn = this.DB_Connect();
              Statement stmt = conn.createStatement();
@@ -107,6 +113,12 @@ public class DB_Conn_Query {
 
     // 고객 데이터 로드
     public void loadCustomerData(DefaultTableModel customerModel) {
+        // 기존 테이블 데이터를 모두 삭제(고객)
+        int rowCount = customerModel.getRowCount();
+        for (int i = rowCount - 1; i >= 0; i--) {
+            customerModel.removeRow(i);
+        }
+
         String query = "SELECT * FROM customer"; // 고객 데이터를 가져오는 SQL 쿼리
         try (Connection conn = this.DB_Connect();
              Statement stmt = conn.createStatement();
@@ -130,6 +142,12 @@ public class DB_Conn_Query {
 
     // 배달원 데이터 로드
     public void loadDeliveryData(DefaultTableModel deliveryModel) {
+        // 기존 테이블 데이터를 모두 삭제(배달원)
+        int rowCount = deliveryModel.getRowCount();
+        for (int i = rowCount - 1; i >= 0; i--) {
+            deliveryModel.removeRow(i);
+        }
+
         String query = "SELECT * FROM delivery_person"; // 배달원 데이터를 가져오는 SQL 쿼리
         try (Connection conn = this.DB_Connect();
              Statement stmt = conn.createStatement();
@@ -151,6 +169,12 @@ public class DB_Conn_Query {
 
     // 주문 데이터 로드
     public void loadOrderData(DefaultTableModel orderModel) {
+        // 기존 테이블 데이터를 모두 삭제(주문)
+        int rowCount = orderModel.getRowCount();
+        for (int i = rowCount - 1; i >= 0; i--) {
+            orderModel.removeRow(i);
+        }
+
         String query = "SELECT * FROM orders"; // 주문 데이터를 가져오는 SQL 쿼리
         try (Connection conn = this.DB_Connect();
              Statement stmt = conn.createStatement();
@@ -175,6 +199,12 @@ public class DB_Conn_Query {
 
     // 리뷰 데이터 로드
     public void loadReviewData(DefaultTableModel reviewModel) {
+        // 기존 테이블 데이터를 모두 삭제(리뷰)
+        int rowCount = reviewModel.getRowCount();
+        for (int i = rowCount - 1; i >= 0; i--) {
+            reviewModel.removeRow(i);
+        }
+
         String query = "SELECT * FROM review ORDER BY review_id"; // 리뷰 데이터를 가져오는 SQL 쿼리
         try (Connection conn = this.DB_Connect();
              Statement stmt = conn.createStatement();
@@ -200,6 +230,12 @@ public class DB_Conn_Query {
 
     // 전체 메뉴 데이터 로드
     public void loadAllMenuData(DefaultTableModel allMenuModel) {
+        // 기존 테이블 데이터를 모두 삭제(전체 메뉴)
+        int rowCount = allMenuModel.getRowCount();
+        for (int i = rowCount - 1; i >= 0; i--) {
+            allMenuModel.removeRow(i);
+        }
+
         String query = "SELECT * FROM menu"; // 모든 메뉴 데이터를 가져오는 SQL 쿼리
         try (Connection conn = this.DB_Connect();
              Statement stmt = conn.createStatement();
@@ -487,8 +523,4 @@ public class DB_Conn_Query {
             System.out.println("Error deleting customer: " + e.getMessage());
         }
     }
-
-
-
-
 }

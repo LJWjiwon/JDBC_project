@@ -210,6 +210,43 @@ public class RestaurantApp extends JFrame {
         dbConn.loadReviewData(reviewModel);
         dbConn.loadAllMenuData(allMenuModel); // 전체 메뉴 데이터 로드
 
+        // 탭 변경 이벤트 리스너 추가
+        tabbedPane.addChangeListener(e -> {
+            int selectedIndex = tabbedPane.getSelectedIndex();
+            String selectedTabTitle = tabbedPane.getTitleAt(selectedIndex); // 현재 선택된 탭 이름 가져오기
+
+            // 탭 이름에 따라 데이터 로드 함수 호출
+            switch (selectedTabTitle) {
+                case "음식점":
+                    dbConn.loadRestaurantData(restaurantModel);
+                    break;
+
+                case "고객":
+                    dbConn.loadCustomerData(customerModel);
+                    break;
+
+                case "배달원":
+                    dbConn.loadDeliveryData(deliveryModel);
+                    break;
+
+                case "주문":
+                    dbConn.loadOrderData(orderModel);
+                    break;
+
+                case "리뷰":
+                    dbConn.loadReviewData(reviewModel);
+                    break;
+
+                case "전체 메뉴":
+                    dbConn.loadAllMenuData(allMenuModel); // 전체 메뉴 데이터 로드
+                    break;
+
+                default:
+                    System.out.println("Unknown tab selected: " + selectedTabTitle);
+                    break;
+            }
+        });
+
         // 음식점 선택 시 메뉴 데이터 로드
         restaurantTable.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
@@ -507,32 +544,6 @@ public class RestaurantApp extends JFrame {
                     JOptionPane.showMessageDialog(this, "유효한 숫자를 입력하세요.");
                 }
             });
-//        }else if ("고객".equals(tabName)) {
-//            JButton updateMembershipButton = new JButton("회원 등급 업데이트");
-//
-//            // 고객 탭 전용 버튼 추가
-//            buttonPanel.add(updateMembershipButton);
-
-//            // 고객 탭 버튼 클릭 이벤트
-//            updateMembershipButton.addActionListener(e -> {
-//                // 선택된 행의 인덱스를 가져옴
-//                int selectedRow = customerTable.getSelectedRow(); // JTable에서 선택된 행 인덱스 가져오기
-//
-//                if (selectedRow != -1) { // 선택된 행이 있을 경우
-//                    // 고객 ID 가져오기 (고객 ID는 첫 번째 컬럼에 있다고 가정)
-//                    int customerId = (Integer) customerModel.getValueAt(selectedRow, 0); // 첫 번째 컬럼에서 고객 ID 가져오기
-//
-//                    // 회원 등급 업데이트 프로시저 호출
-//                    CustomerService customerService = new CustomerService();
-//                    customerService.updateMembershipGrade(customerId);
-//
-//                    // 사용자에게 성공 메시지 표시
-//                    showAlert("Success", "Membership grade updated successfully.");
-//                } else {
-//                    // 선택된 고객이 없을 경우 오류 메시지 표시
-//                    showAlert("Error", "Please select a customer.");
-//                }
-//            });
 
         }
 
@@ -549,11 +560,9 @@ public class RestaurantApp extends JFrame {
         // 공통 버튼 클릭 이벤트 (구현 필요)
         addButton.addActionListener(e -> JOptionPane.showMessageDialog(this, tabName + " 추가 버튼 클릭"));
         editButton.addActionListener(e -> JOptionPane.showMessageDialog(this, tabName + " 수정 버튼 클릭"));
-        
+
         return buttonPanel;
     }
-
-
 
 
     public static void main(String[] args) {

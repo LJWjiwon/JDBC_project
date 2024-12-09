@@ -464,6 +464,29 @@ public class DB_Conn_Query {
         }
     }
 
+    public void deleteCustomer(int customerId) {
+        String sql = "DELETE FROM customer WHERE customer_id = ?";
+
+        try (Connection conn = this.DB_Connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            // 삭제할 고객 ID 설정
+            pstmt.setInt(1, customerId);
+
+            // 삭제 쿼리 실행
+            int rowsAffected = pstmt.executeUpdate();
+
+            if (rowsAffected > 0) {
+                System.out.println("Customer deleted successfully.");
+            } else {
+                System.out.println("No customer found with the given ID.");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error deleting customer: " + e.getMessage());
+        }
+    }
 
 
 

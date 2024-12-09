@@ -77,6 +77,8 @@ public class RestaurantApp extends JFrame {
         customerPanel.add(customerScrollPane, BorderLayout.CENTER);
         customerPanel.add(addButtonsPanel("고객"), BorderLayout.SOUTH);
 
+
+
         // 버튼 추가 영역
         JPanel buttonPanel_customer = new JPanel(new FlowLayout(FlowLayout.CENTER));
         JButton btn1 = new JButton("회원등급 업데이트");
@@ -177,7 +179,8 @@ public class RestaurantApp extends JFrame {
         buttonPanel.add(button2);
 
         // 버튼 패널을 reviewPanel의 아래쪽에 추가
-        reviewPanel.add(buttonPanel, BorderLayout.SOUTH);  // 버튼이 아래쪽에 보이게
+        reviewPanel.add(buttonPanel, BorderLayout.SOUTH);
+        // 버튼이 아래쪽에 보이게
 
 
         // 전체 메뉴 탭
@@ -382,6 +385,32 @@ public class RestaurantApp extends JFrame {
                 JOptionPane.showMessageDialog(null, "Please select a customer.", "Error", JOptionPane.WARNING_MESSAGE);
             }
         });
+        btn4.addActionListener(e -> {
+            int selectedRow = customerTable.getSelectedRow();
+
+            if (selectedRow != -1) {
+                try {
+                    // 선택된 행의 고객 ID를 가져옴
+                    int customerId = (Integer) customerModel.getValueAt(selectedRow, 0);
+
+                    // 데이터베이스에서 고객 삭제
+                    DB_Conn_Query customerService = new DB_Conn_Query();
+                    customerService.deleteCustomer(customerId);
+
+                    // 테이블 모델에서 해당 행 삭제
+                    customerModel.removeRow(selectedRow);
+
+                    // 성공 메시지 표시
+                    JOptionPane.showMessageDialog(null, "Customer deleted successfully.", "Success", JOptionPane.INFORMATION_MESSAGE);
+                } catch (Exception ex) {
+                    // 오류 발생 시 메시지 표시
+                    JOptionPane.showMessageDialog(null, "An error occurred: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } else {
+                // 선택된 고객이 없을 경우 메시지 표시
+                JOptionPane.showMessageDialog(null, "Please select a customer.", "Error", JOptionPane.WARNING_MESSAGE);
+            }
+        });
     }
 
 
@@ -520,8 +549,7 @@ public class RestaurantApp extends JFrame {
         // 공통 버튼 클릭 이벤트 (구현 필요)
         addButton.addActionListener(e -> JOptionPane.showMessageDialog(this, tabName + " 추가 버튼 클릭"));
         editButton.addActionListener(e -> JOptionPane.showMessageDialog(this, tabName + " 수정 버튼 클릭"));
-        deleteButton.addActionListener(e -> JOptionPane.showMessageDialog(this, tabName + " 삭제 버튼 클릭"));
-
+        
         return buttonPanel;
     }
 

@@ -95,6 +95,22 @@ public class RestaurantApp extends JFrame {
         orderPanel.add(orderScrollPane, BorderLayout.CENTER);
         orderPanel.add(addButtonsPanel("주문"), BorderLayout.SOUTH);
 
+        // 버튼 추가 영역
+        JPanel buttonPanel_review = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JButton button_a = new JButton("리뷰 작성");
+        JButton button_b = new JButton("수정");
+        JButton button_c = new JButton("수정");
+
+        buttonPanel_review.add(button_a);
+        buttonPanel_review.add(button_b);
+        buttonPanel_review.add(button_c);
+
+        // 버튼 패널을 orderPanel의 아래쪽에 추가
+        orderPanel.add(buttonPanel_review, BorderLayout.SOUTH);  // 버튼이 아래쪽에 보이게
+
+
+
+
         // 주문 상세 테이블 추가 (옆에 표시)
         JPanel orderDetailPanel = new JPanel(new BorderLayout());
         orderDetailModel = new DefaultTableModel();
@@ -105,6 +121,8 @@ public class RestaurantApp extends JFrame {
         orderPanel.add(orderDetailPanel, BorderLayout.EAST);
 
         tabbedPane.addTab("주문", orderPanel);
+
+
 
         // 리뷰 탭
         JPanel reviewPanel = new JPanel(new BorderLayout());
@@ -225,6 +243,90 @@ public class RestaurantApp extends JFrame {
                 }
             }
         });
+
+        button_a.addActionListener(e -> {
+            // 주문 테이블에서 선택된 행을 가져옵니다.
+            int selectedRow = orderTable.getSelectedRow();
+
+            // 주문 테이블에서 선택된 행이 없을 경우 메시지 출력
+            if (selectedRow == -1) {
+                JOptionPane.showMessageDialog(this, "리뷰를 작성할 주문을 선택하세요.");
+                return;
+            }
+
+            // 주문 ID, 고객 ID, 음식점 ID, 배달원 ID 가져오기
+            int orderId = (int) orderModel.getValueAt(selectedRow, 0); // 주문 ID
+            int customerId = (int) orderModel.getValueAt(selectedRow, 1); // 고객 ID
+            int restaurantId = (int) orderModel.getValueAt(selectedRow, 2); // 음식점 ID
+            int deliveryPersonId = (int) orderModel.getValueAt(selectedRow, 5); // 배달원 ID
+
+            // 리뷰 입력을 위한 입력 창 구성
+            JTextField restaurantRatingField = new JTextField();
+            restaurantRatingField.setPreferredSize(new Dimension(80, 30));  // 평점 입력 칸의 크기를 작게 설정
+            JTextField deliveryRatingField = new JTextField();
+            deliveryRatingField.setPreferredSize(new Dimension(80, 30));  // 평점 입력 칸의 크기를 작게 설정
+
+            // 리뷰 내용 입력 창
+            JTextArea reviewContentArea = new JTextArea(5, 20);
+            reviewContentArea.setLineWrap(true);
+            reviewContentArea.setWrapStyleWord(true);
+
+            JScrollPane reviewScrollPane_write = new JScrollPane(reviewContentArea);
+            reviewScrollPane_write.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+
+            JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));  // FlowLayout 사용
+            panel.add(new JLabel("음식점 평점 (1~5):"));
+            panel.add(restaurantRatingField);
+            panel.add(new JLabel("배달원 평점 (1~5):"));
+            panel.add(deliveryRatingField);
+            panel.add(new JLabel("리뷰 내용:"));
+            panel.add(reviewContentArea);
+
+            // 레이아웃을 새로 고침
+            panel.revalidate();
+            panel.repaint();
+
+            int result = JOptionPane.showConfirmDialog(this, panel, "리뷰 작성", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+            if (result == JOptionPane.OK_OPTION) {
+                try {
+                    double restaurantRating = Double.parseDouble(restaurantRatingField.getText());
+                    double deliveryRating = Double.parseDouble(deliveryRatingField.getText());
+                    String reviewContent = reviewContentArea.getText();
+
+                    // 평점 유효성 검사
+                    if (restaurantRating < 1 || restaurantRating > 5 || deliveryRating < 1 || deliveryRating > 5) {
+                        JOptionPane.showMessageDialog(this, "평점은 1에서 5 사이의 값이어야 합니다.");
+                        return;
+                    }
+
+                    // DB에 리뷰 저장 (written_date는 sysdate로 자동 처리됨)
+                    dbConn.saveReview(orderId, customerId, restaurantId, deliveryPersonId, restaurantRating, deliveryRating, reviewContent);
+
+                    JOptionPane.showMessageDialog(this, "리뷰가 성공적으로 저장되었습니다.");
+
+                    // 기존 테이블 데이터를 모두 삭제
+                    int rowCount = reviewModel.getRowCount();
+                    for (int i = rowCount - 1; i >= 0; i--) {
+                        reviewModel.removeRow(i);
+                    }
+
+                    // 리뷰 데이터 테이블 새로고침
+                    dbConn.loadReviewData(reviewModel);
+                    
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(this, "평점은 숫자로 입력하세요.");
+                    ex.printStackTrace(); // 예외 메시지 출력
+                }
+            }
+        });
+
+
+
+
+
+
+
     }
 
 
@@ -296,18 +398,11 @@ public class RestaurantApp extends JFrame {
 
             // 고객 탭 버튼 클릭 이벤트
             updateMembershipButton.addActionListener(e -> JOptionPane.showMessageDialog(this, "회원 등급 업데이트 버튼 클릭"));
-        } else if ("주문".equals(tabName)) {
-            JButton writeReviewBtn = new JButton("리뷰 작성");
-
-            // 주문 탭 전용 버튼 추가
-            buttonPanel.add(writeReviewBtn);
-
-            // 주문 탭 버튼 클릭 이벤트
-            writeReviewBtn.addActionListener(e -> JOptionPane.showMessageDialog(this, "리뷰 작성 버튼 클릭"));
         }
 
+
         // 공통 버튼 추가 (주문/리뷰 탭에서는 추가 버튼이 안 보임)
-        if (!"주문".equals(tabName) && !"리뷰".equals(tabName)) {
+        if (!"리뷰".equals(tabName)) {
             buttonPanel.add(addButton);
         }
 
@@ -322,6 +417,7 @@ public class RestaurantApp extends JFrame {
 
         return buttonPanel;
     }
+
 
 
 

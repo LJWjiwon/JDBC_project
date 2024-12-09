@@ -334,4 +334,59 @@ public class DB_Conn_Query {
 
         return loyalCustomers.toString();  // 결과 반환
     }
+
+
+    public void saveReview(int orderId, int customerId, int restaurantId, int deliveryPersonId, double restaurantRating, double deliveryRating, String reviewContent) {
+        // 1. 새로운 review_id를 가져오기 위한 쿼리 작성
+        String maxReviewIdSql = "SELECT MAX(review_id) FROM review";
+        int newReviewId = 1;  // 기본적으로 review_id가 1부터 시작한다고 가정
+
+        try (Connection conn = this.DB_Connect();
+             PreparedStatement maxPstmt = conn.prepareStatement(maxReviewIdSql);
+             ResultSet rs = maxPstmt.executeQuery()) {
+
+            if (rs.next()) {
+                // 기존 review_id 중 가장 큰 값을 가져와서 +1을 하여 새로운 review_id를 생성
+                newReviewId = rs.getInt(1) + 1;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        // 2. 새로운 review를 삽입
+        String sql = "INSERT INTO review (review_id, order_id, customer_id, restaurant_id, delivery_person_id, restaurant_rating, delivery_person_rating, review_content) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (Connection conn = this.DB_Connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            // 값 설정
+            pstmt.setInt(1, newReviewId); // 새로운 review_id 설정
+            pstmt.setInt(2, orderId); // order_id (주문 ID) 설정
+            pstmt.setInt(3, customerId); // customer_id 설정
+            pstmt.setInt(4, restaurantId); // restaurant_id 설정
+            pstmt.setInt(5, deliveryPersonId); // delivery_person_id 설정
+            pstmt.setDouble(6, restaurantRating); // restaurant_rating 설정
+            pstmt.setDouble(7, deliveryRating); // delivery_person_rating 설정
+            pstmt.setString(8, reviewContent); // review_content 설정
+
+            // 실행
+            int affectedRows = pstmt.executeUpdate();
+            if (affectedRows > 0) {
+                System.out.println("리뷰가 성공적으로 저장되었습니다.");
+            } else {
+                System.out.println("리뷰 저장에 실패했습니다.");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+
+
+
+
+
 }

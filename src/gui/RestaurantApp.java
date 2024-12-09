@@ -356,6 +356,36 @@ public class RestaurantApp extends JFrame {
             buttonPanel.add(new JLabel("할인율 (%):")); // 입력 필드 앞에 레이블 추가
             buttonPanel.add(discountField);
             buttonPanel.add(applyDiscountButton);
+            //할인율 버튼 클릭 이벤트
+            applyDiscountButton.addActionListener(a -> {
+                try {
+                            // 할인율 가져오기
+                            String discountText = discountField.getText();
+                            int discount = Integer.parseInt(discountText);
+
+                            // 할인율 유효성 검사
+                            if (discount < 0 || discount > 100) {
+                                JOptionPane.showMessageDialog(null, "할인율은 0~100% 사이로 입력해주세요.");
+                                return;
+                            }
+
+                            // 메뉴 모델 데이터에 할인율 적용
+                            for (int i = 0; i < menuModel.getRowCount(); i++) {
+                                // 원래 가격 가져오기
+                                float originalPrice = (float) menuModel.getValueAt(i, 2); // 가격 열 (3번째 열)
+
+                                // 할인된 가격 계산
+                                float discountedPrice = originalPrice * (1 - (discount / 100.0f));
+
+                                // 테이블에 할인된 가격 설정
+                                menuModel.setValueAt(discountedPrice, i, 2);
+                            }
+
+                            JOptionPane.showMessageDialog(null, "할인율이 적용되었습니다.");
+                        } catch (NumberFormatException ex) {
+                            JOptionPane.showMessageDialog(null, "유효한 숫자를 입력해주세요.");
+                        }
+            });
 
             // 음식점 탭 버튼 클릭 이벤트 (구현 필요)
             orderButton.addActionListener(e -> JOptionPane.showMessageDialog(this, "주문 버튼 클릭"));

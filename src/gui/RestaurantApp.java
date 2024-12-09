@@ -116,9 +116,12 @@ public class RestaurantApp extends JFrame {
         JPanel buttonPanel_review = new JPanel(new FlowLayout(FlowLayout.CENTER));
         JButton button_a = new JButton("리뷰 작성");
         JButton button_b = new JButton("수정");
+        JButton button_c = new JButton("삭제");
 
         buttonPanel_review.add(button_a);
         buttonPanel_review.add(button_b);
+        buttonPanel_review.add(button_c);
+
 
         // 버튼 패널을 orderPanel의 아래쪽에 추가
         orderPanel.add(buttonPanel_review, BorderLayout.SOUTH);  // 버튼이 아래쪽에 보이게
@@ -367,9 +370,9 @@ public class RestaurantApp extends JFrame {
                         customerModel.removeRow(i);
                     }
 
-                    // 음식점 데이터 테이블 새로고침
+                    // 고객 데이터 테이블 새로고침
                     dbConn.loadCustomerData(customerModel);
-                    
+
                 } catch (Exception ex) {
                     // 오류 발생 시 메시지 창 표시
                     JOptionPane.showMessageDialog(null, "An error occurred: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);

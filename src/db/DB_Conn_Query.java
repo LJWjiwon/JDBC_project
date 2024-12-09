@@ -370,17 +370,79 @@ public class DB_Conn_Query {
             pstmt.setDouble(7, deliveryRating); // 배달원 평점
             pstmt.setString(8, reviewContent);  // 리뷰 내용
 
-            // 실행
+            // 리뷰 삽입
             int affectedRows = pstmt.executeUpdate();
             if (affectedRows > 0) {
                 System.out.println("리뷰가 성공적으로 저장되었습니다.");
             } else {
                 System.out.println("리뷰 저장에 실패했습니다.");
             }
+
+            // 리뷰가 성공적으로 삽입되면 평균 평점 계산
+            updateRestaurantRating(restaurantId);
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
+
+
+    public void updateRestaurantRating(int restaurantId) {
+        String sql = "SELECT AVG(restaurant_rating) FROM review WHERE restaurant_id = ?";
+        double avgRating = 0;
+
+        try (Connection conn = this.DB_Connect()) {
+            // 자동 커밋을 비활성화하여 트랜잭션을 시작합니다.
+            conn.setAutoCommit(false);
+
+            // 1. 평균 평점 계산
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setInt(1, restaurantId);
+                ResultSet rs = pstmt.executeQuery();
+                if (rs.next()) {
+                    avgRating = rs.getDouble(1);
+                }
+
+                // 2. 음식점의 평균 평점 업데이트
+                String updateAvgRatingSql = "UPDATE restaurant SET restaurant_rating = ? WHERE restaurant_id = ?";
+                try (PreparedStatement updatePstmt = conn.prepareStatement(updateAvgRatingSql)) {
+                    updatePstmt.setDouble(1, avgRating);
+                    updatePstmt.setInt(2, restaurantId);
+                    updatePstmt.executeUpdate();
+                }
+
+                // 3. 가장 높은 평점을 가진 음식점 계산
+                String topRatedSql = "SELECT restaurant_id FROM restaurant ORDER BY restaurant_rating DESC FETCH FIRST 1 ROWS ONLY";
+                int topRatedRestaurantId = 0;
+                try (PreparedStatement topRatedPstmt = conn.prepareStatement(topRatedSql)) {
+                    ResultSet topRatedRs = topRatedPstmt.executeQuery();
+                    if (topRatedRs.next()) {
+                        topRatedRestaurantId = topRatedRs.getInt(1);
+                    }
+                }
+
+                // 4. 가장 높은 평점을 가진 음식점에 'TOP_RATED_RESTAURANT' 플래그 설정
+                String updateTopRatedFlagSql = "UPDATE restaurant SET top_rated_restaurant = ? WHERE restaurant_id = ?";
+                try (PreparedStatement updateTopRatedPstmt = conn.prepareStatement(updateTopRatedFlagSql)) {
+                    updateTopRatedPstmt.setString(1, (topRatedRestaurantId == restaurantId) ? "Y" : "N");
+                    updateTopRatedPstmt.setInt(2, restaurantId);
+                    updateTopRatedPstmt.executeUpdate();
+                }
+
+                // 5. 트랜잭션 커밋
+                conn.commit();
+                System.out.println("평점 업데이트 및 가장 높은 평점 음식점 플래그 설정 완료.");
+
+            } catch (SQLException e) {
+                conn.rollback();
+                e.printStackTrace();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
 
 
 

@@ -313,6 +313,15 @@ public class RestaurantApp extends JFrame {
 
                     // 리뷰 데이터 테이블 새로고침
                     dbConn.loadReviewData(reviewModel);
+
+                    // 기존 테이블 데이터를 모두 삭제(음식점)
+                    rowCount = restaurantModel.getRowCount();
+                    for (int i = rowCount - 1; i >= 0; i--) {
+                        restaurantModel.removeRow(i);
+                    }
+
+                    // 음식점 데이터 테이블 새로고침
+                    dbConn.loadRestaurantData(restaurantModel);
                     
                 } catch (NumberFormatException ex) {
                     JOptionPane.showMessageDialog(this, "평점은 숫자로 입력하세요.");
@@ -320,13 +329,6 @@ public class RestaurantApp extends JFrame {
                 }
             }
         });
-
-
-
-
-
-
-
     }
 
 

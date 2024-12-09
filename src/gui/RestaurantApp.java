@@ -80,23 +80,6 @@ public class RestaurantApp extends JFrame {
         customerPanel.add(customerScrollPane, BorderLayout.CENTER);
         customerPanel.add(addButtonsPanel("고객"), BorderLayout.SOUTH);
 
-        // 버튼 추가 영역
-        JPanel buttonPanel_customer = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        JButton btn1 = new JButton("회원등급 업데이트");
-        JButton btn2 = new JButton("추가");
-        JButton btn3 = new JButton("수정");
-        JButton btn4 = new JButton("삭제");
-
-        buttonPanel_customer.add(btn1);
-        buttonPanel_customer.add(btn2);
-        buttonPanel_customer.add(btn3);
-        buttonPanel_customer.add(btn4);
-
-        // 버튼 패널을 orderPanel의 아래쪽에 추가
-        customerPanel.add(buttonPanel_customer, BorderLayout.SOUTH);  // 버튼이 아래쪽에 보이게
-
-
-
         // 배달원 탭
         JPanel deliveryPanel = new JPanel(new BorderLayout());
         deliveryModel = new DefaultTableModel();
@@ -115,20 +98,6 @@ public class RestaurantApp extends JFrame {
         orderPanel.add(orderScrollPane, BorderLayout.CENTER);
         orderPanel.add(addButtonsPanel("주문"), BorderLayout.SOUTH);
 
-        // 버튼 추가 영역
-        JPanel buttonPanel_review = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        JButton button_a = new JButton("리뷰 작성");
-        JButton button_b = new JButton("수정");
-
-        buttonPanel_review.add(button_a);
-        buttonPanel_review.add(button_b);
-
-        // 버튼 패널을 orderPanel의 아래쪽에 추가
-        orderPanel.add(buttonPanel_review, BorderLayout.SOUTH);  // 버튼이 아래쪽에 보이게
-
-
-
-
         // 주문 상세 테이블 추가 (옆에 표시)
         JPanel orderDetailPanel = new JPanel(new BorderLayout());
         orderDetailModel = new DefaultTableModel();
@@ -139,8 +108,6 @@ public class RestaurantApp extends JFrame {
         orderPanel.add(orderDetailPanel, BorderLayout.EAST);
 
         tabbedPane.addTab("주문", orderPanel);
-
-
 
         // 리뷰 탭
         JPanel reviewPanel = new JPanel(new BorderLayout());
@@ -261,188 +228,7 @@ public class RestaurantApp extends JFrame {
                 }
             }
         });
-
-        button_a.addActionListener(e -> {
-            // 주문 테이블에서 선택된 행을 가져옵니다.
-            int selectedRow = orderTable.getSelectedRow();
-
-            // 주문 테이블에서 선택된 행이 없을 경우 메시지 출력
-            if (selectedRow == -1) {
-                JOptionPane.showMessageDialog(this, "리뷰를 작성할 주문을 선택하세요.");
-                return;
-            }
-
-            // 주문 ID, 고객 ID, 음식점 ID, 배달원 ID 가져오기
-            int orderId = (int) orderModel.getValueAt(selectedRow, 0); // 주문 ID
-            int customerId = (int) orderModel.getValueAt(selectedRow, 1); // 고객 ID
-            int restaurantId = (int) orderModel.getValueAt(selectedRow, 2); // 음식점 ID
-            int deliveryPersonId = (int) orderModel.getValueAt(selectedRow, 5); // 배달원 ID
-
-            // 리뷰 입력을 위한 입력 창 구성
-            JTextField restaurantRatingField = new JTextField();
-            restaurantRatingField.setPreferredSize(new Dimension(80, 30));  // 평점 입력 칸의 크기를 작게 설정
-            JTextField deliveryRatingField = new JTextField();
-            deliveryRatingField.setPreferredSize(new Dimension(80, 30));  // 평점 입력 칸의 크기를 작게 설정
-
-            // 리뷰 내용 입력 창
-            JTextArea reviewContentArea = new JTextArea(5, 20);
-            reviewContentArea.setLineWrap(true);
-            reviewContentArea.setWrapStyleWord(true);
-
-            JScrollPane reviewScrollPane_write = new JScrollPane(reviewContentArea);
-            reviewScrollPane_write.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-
-            JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));  // FlowLayout 사용
-            panel.add(new JLabel("음식점 평점 (1~5):"));
-            panel.add(restaurantRatingField);
-            panel.add(new JLabel("배달원 평점 (1~5):"));
-            panel.add(deliveryRatingField);
-            panel.add(new JLabel("리뷰 내용:"));
-            panel.add(reviewContentArea);
-
-            // 레이아웃을 새로 고침
-            panel.revalidate();
-            panel.repaint();
-
-            int result = JOptionPane.showConfirmDialog(this, panel, "리뷰 작성", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-
-            if (result == JOptionPane.OK_OPTION) {
-                try {
-                    double restaurantRating = Double.parseDouble(restaurantRatingField.getText());
-                    double deliveryRating = Double.parseDouble(deliveryRatingField.getText());
-                    String reviewContent = reviewContentArea.getText();
-
-                    // 평점 유효성 검사
-                    if (restaurantRating < 1 || restaurantRating > 5 || deliveryRating < 1 || deliveryRating > 5) {
-                        JOptionPane.showMessageDialog(this, "평점은 1에서 5 사이의 값이어야 합니다.");
-                        return;
-                    }
-
-                    // DB에 리뷰 저장 (written_date는 sysdate로 자동 처리됨)
-                    dbConn.saveReview(orderId, customerId, restaurantId, deliveryPersonId, restaurantRating, deliveryRating, reviewContent);
-
-                    JOptionPane.showMessageDialog(this, "리뷰가 성공적으로 저장되었습니다.");
-
-                    // 기존 테이블 데이터를 모두 삭제
-                    int rowCount = reviewModel.getRowCount();
-                    for (int i = rowCount - 1; i >= 0; i--) {
-                        reviewModel.removeRow(i);
-                    }
-
-                    // 리뷰 데이터 테이블 새로고침
-                    dbConn.loadReviewData(reviewModel);
-
-                    // 기존 테이블 데이터를 모두 삭제(음식점)
-                    rowCount = restaurantModel.getRowCount();
-                    for (int i = rowCount - 1; i >= 0; i--) {
-                        restaurantModel.removeRow(i);
-                    }
-
-                    // 음식점 데이터 테이블 새로고침
-                    dbConn.loadRestaurantData(restaurantModel);
-
-                } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(this, "평점은 숫자로 입력하세요.");
-                    ex.printStackTrace(); // 예외 메시지 출력
-                }
-            }
-        });
-
-        btn1.addActionListener(e -> {
-            // 선택된 행의 인덱스를 가져옴
-            int selectedRow = customerTable.getSelectedRow(); // JTable에서 선택된 행 인덱스 가져오기
-
-            if (selectedRow != -1) { // 선택된 행이 있을 경우
-                try {
-                    // 선택된 행의 고객 ID를 가져옴
-                    int customerId = (Integer) customerModel.getValueAt(selectedRow, 0);
-
-                    // 회원 등급 업데이트
-                    DB_Conn_Query customerService = new DB_Conn_Query();
-                    customerService.updateMembershipGrade(customerId);
-
-                    // 성공 메시지 창 표시
-                    JOptionPane.showMessageDialog(null, "Membership grade updated successfully.", "Success", JOptionPane.INFORMATION_MESSAGE);
-
-                    // 기존 테이블 데이터를 모두 삭제(고객)
-                    int rowCount = customerModel.getRowCount();
-                    for (int i = rowCount - 1; i >= 0; i--) {
-                        customerModel.removeRow(i);
-                    }
-
-                    // 음식점 데이터 테이블 새로고침
-                    dbConn.loadCustomerData(customerModel);
-
-                } catch (Exception ex) {
-                    // 오류 발생 시 메시지 창 표시
-                    JOptionPane.showMessageDialog(null, "An error occurred: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                }
-            } else {
-                // 선택된 고객이 없을 경우 메시지 창 표시
-                JOptionPane.showMessageDialog(null, "Please select a customer.", "Error", JOptionPane.WARNING_MESSAGE);
-            }
-        });
-
-        btn2.addActionListener(e ->  {
-            // 고객 추가 버튼 클릭 이벤트
-            // 팝업 창을 띄워서 고객 정보를 입력받기 위한 JTextField 등 사용
-            JTextField idField = new JTextField(20);
-            JTextField nameField = new JTextField(20);
-            JTextField phoneField = new JTextField(20);
-            JTextField addressField = new JTextField(20);
-            JTextField order_countField = new JTextField(20);
-            JTextField Membership_gradField = new JTextField(20);
-
-            // 팝업 창 생성
-            JPanel panel = new JPanel();
-            panel.add(new JLabel("고객ID:"));
-            panel.add(idField);
-            panel.add(new JLabel("고객명:"));
-            panel.add(nameField);
-            panel.add(new JLabel("전화번호:"));
-            panel.add(phoneField);
-            panel.add(new JLabel("주소:"));
-            panel.add(addressField);
-            panel.add(new JLabel("주문횟수:"));
-            panel.add(order_countField);
-            panel.add(new JLabel("등급:"));
-            panel.add(Membership_gradField);
-
-            int option = JOptionPane.showConfirmDialog(null, panel, "새 고객 추가", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-
-            if (option == JOptionPane.OK_OPTION) {
-                String customerId = idField.getText();
-                String customerName = nameField.getText();
-                String customerPhone = phoneField.getText();
-                String customerAddress = addressField.getText();
-                String customer_order_count = order_countField.getText();
-                String customermembership_grad = Membership_gradField.getText();
-
-
-                // 유효성 검사 (예시)
-                if (customerName.isEmpty() || customerPhone.isEmpty() || customerAddress.isEmpty()) {
-                    JOptionPane.showMessageDialog(null, "모든 필드를 입력해주세요.", "입력 오류", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-
-                // 테이블에 추가
-                DefaultTableModel customerModel = (DefaultTableModel) customerTable.getModel();
-                customerModel.addRow(new Object[]{customerId,customerName, customerPhone, customerAddress, customer_order_count, customermembership_grad});
-
-
-                // 데이터베이스에 추가
-                dbConn.addCustomerToDatabase(customerId,customerName, customerPhone, customerAddress, customer_order_count, customermembership_grad);
-
-                // 성공 메시지
-                JOptionPane.showMessageDialog(null, "고객이 성공적으로 추가되었습니다.", "성공", JOptionPane.INFORMATION_MESSAGE);
-            }
-        });
-
-
     }
-
-
-
 
 
     // 패널 하단에 버튼을 추가하기 위한 메서드
@@ -460,71 +246,6 @@ public class RestaurantApp extends JFrame {
             JButton topCustomerButton = new JButton("단골 고객 조회");
             JButton topRatingButton = new JButton("최고 평점 조회");
 
-            // 주문 버튼 클릭 이벤트 처리
-            orderButton.addActionListener(e -> {
-                // restaurantTable이 제대로 초기화된 경우에만 진행
-                if (restaurantTable != null) {
-                    int selectedRestaurantRow = restaurantTable.getSelectedRow();  // 선택된 음식점 행
-                    if (selectedRestaurantRow == -1) {
-                        JOptionPane.showMessageDialog(this, "음식점을 선택하세요.");
-                        return;
-                    }
-
-                    int restaurantId = (int) restaurantModel.getValueAt(selectedRestaurantRow, 0); // 음식점 ID
-                    String restaurantName = (String) restaurantModel.getValueAt(selectedRestaurantRow, 1); // 음식점 이름
-
-                    // 선택된 메뉴 가져오기
-                    java.util.List<Object[]> selectedMenus = new ArrayList<>();
-                    for (int i = 0; i < menuModel.getRowCount(); i++) {
-                        Boolean isSelected = (Boolean) menuModel.getValueAt(i, 0); // 체크박스 열 확인
-                        if (isSelected != null && isSelected) {
-                            String menuName = (String) menuModel.getValueAt(i, 1); // 메뉴 이름
-                            Float price = (Float) menuModel.getValueAt(i, 2); // 메뉴 가격
-                            selectedMenus.add(new Object[]{menuName, price});
-                        }
-                    }
-
-                    if (selectedMenus.isEmpty()) {
-                        JOptionPane.showMessageDialog(this, "메뉴를 선택하세요.");
-                        return;
-                    }
-
-                    // 선택된 메뉴 확인
-                    StringBuilder orderDetails = new StringBuilder("음식점: " + restaurantName + "\n");
-                    orderDetails.append("주문 메뉴:\n");
-                    float totalPrice = 0;
-                    for (Object[] menu : selectedMenus) {
-                        orderDetails.append("- ").append(menu[0]).append(": ").append(menu[1]).append("원\n");
-                        totalPrice += (Float) menu[1];
-                    }
-                    orderDetails.append("총 가격: ").append(totalPrice).append("원\n");
-
-                    // 확인 창
-                    int confirm = JOptionPane.showConfirmDialog(this, orderDetails.toString(), "주문 확인", JOptionPane.OK_CANCEL_OPTION);
-                    if (confirm == JOptionPane.OK_OPTION) {
-                        // 주문 데이터 추가
-                        try {
-                            dbConn.addOrder(restaurantId, totalPrice); // DB에 주문 추가
-                            JOptionPane.showMessageDialog(this, "주문이 성공적으로 접수되었습니다.");
-
-                            // 주문 테이블 새로고침
-                            int rowCount = orderModel.getRowCount();
-                            for (int i = rowCount - 1; i >= 0; i--) {
-                                orderModel.removeRow(i);
-                            }
-                            dbConn.loadOrderData(orderModel); // 주문 데이터 로드
-                        } catch (Exception ex) {
-                            JOptionPane.showMessageDialog(this, "주문 처리 중 오류가 발생했습니다: " + ex.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
-                        }
-                    }
-                } else {
-                    JOptionPane.showMessageDialog(this, "음식점 테이블이 초기화되지 않았습니다.");
-                }
-            });
-
-
-
-
             // 숫자 입력 영역과 할인 버튼
             JTextField discountField = new JTextField(5); // 입력 필드(숫자 입력)
             JButton applyDiscountButton = new JButton("할인 적용");
@@ -536,36 +257,6 @@ public class RestaurantApp extends JFrame {
             buttonPanel.add(new JLabel("할인율 (%):")); // 입력 필드 앞에 레이블 추가
             buttonPanel.add(discountField);
             buttonPanel.add(applyDiscountButton);
-            //할인율 버튼 클릭 이벤트
-            applyDiscountButton.addActionListener(a -> {
-                try {
-                    // 할인율 가져오기
-                    String discountText = discountField.getText();
-                    int discount = Integer.parseInt(discountText);
-
-                    // 할인율 유효성 검사
-                    if (discount < 0 || discount > 100) {
-                        JOptionPane.showMessageDialog(null, "할인율은 0~100% 사이로 입력해주세요.");
-                        return;
-                    }
-
-                    // 메뉴 모델 데이터에 할인율 적용
-                    for (int i = 0; i < menuModel.getRowCount(); i++) {
-                        // 원래 가격 가져오기
-                        float originalPrice = (float) menuModel.getValueAt(i, 2); // 가격 열 (3번째 열)
-
-                        // 할인된 가격 계산
-                        float discountedPrice = originalPrice * (1 - (discount / 100.0f));
-
-                        // 테이블에 할인된 가격 설정
-                        menuModel.setValueAt(discountedPrice, i, 2);
-                    }
-
-                    JOptionPane.showMessageDialog(null, "할인율이 적용되었습니다.");
-                } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(null, "유효한 숫자를 입력해주세요.");
-                }
-            });
 
             // 음식점 탭 버튼 클릭 이벤트 (구현 필요)
             orderButton.addActionListener(e -> JOptionPane.showMessageDialog(this, "주문 버튼 클릭"));
@@ -600,38 +291,26 @@ public class RestaurantApp extends JFrame {
                     JOptionPane.showMessageDialog(this, "유효한 숫자를 입력하세요.");
                 }
             });
-//        }else if ("고객".equals(tabName)) {
-//            JButton updateMembershipButton = new JButton("회원 등급 업데이트");
-//
-//            // 고객 탭 전용 버튼 추가
-//            buttonPanel.add(updateMembershipButton);
+        }else if ("고객".equals(tabName)) {
+            JButton updateMembershipButton = new JButton("회원 등급 업데이트");
 
-//            // 고객 탭 버튼 클릭 이벤트
-//            updateMembershipButton.addActionListener(e -> {
-//                // 선택된 행의 인덱스를 가져옴
-//                int selectedRow = customerTable.getSelectedRow(); // JTable에서 선택된 행 인덱스 가져오기
-//
-//                if (selectedRow != -1) { // 선택된 행이 있을 경우
-//                    // 고객 ID 가져오기 (고객 ID는 첫 번째 컬럼에 있다고 가정)
-//                    int customerId = (Integer) customerModel.getValueAt(selectedRow, 0); // 첫 번째 컬럼에서 고객 ID 가져오기
-//
-//                    // 회원 등급 업데이트 프로시저 호출
-//                    CustomerService customerService = new CustomerService();
-//                    customerService.updateMembershipGrade(customerId);
-//
-//                    // 사용자에게 성공 메시지 표시
-//                    showAlert("Success", "Membership grade updated successfully.");
-//                } else {
-//                    // 선택된 고객이 없을 경우 오류 메시지 표시
-//                    showAlert("Error", "Please select a customer.");
-//                }
-//            });
+            // 고객 탭 전용 버튼 추가
+            buttonPanel.add(updateMembershipButton);
 
+            // 고객 탭 버튼 클릭 이벤트
+            updateMembershipButton.addActionListener(e -> JOptionPane.showMessageDialog(this, "회원 등급 업데이트 버튼 클릭"));
+        } else if ("주문".equals(tabName)) {
+            JButton writeReviewBtn = new JButton("리뷰 작성");
+
+            // 주문 탭 전용 버튼 추가
+            buttonPanel.add(writeReviewBtn);
+
+            // 주문 탭 버튼 클릭 이벤트
+            writeReviewBtn.addActionListener(e -> JOptionPane.showMessageDialog(this, "리뷰 작성 버튼 클릭"));
         }
 
-
         // 공통 버튼 추가 (주문/리뷰 탭에서는 추가 버튼이 안 보임)
-        if (!"리뷰".equals(tabName)) {
+        if (!"주문".equals(tabName) && !"리뷰".equals(tabName)) {
             buttonPanel.add(addButton);
         }
 
@@ -646,7 +325,6 @@ public class RestaurantApp extends JFrame {
 
         return buttonPanel;
     }
-
 
 
 

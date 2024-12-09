@@ -175,7 +175,7 @@ public class DB_Conn_Query {
 
     // 리뷰 데이터 로드
     public void loadReviewData(DefaultTableModel reviewModel) {
-        String query = "SELECT * FROM review"; // 리뷰 데이터를 가져오는 SQL 쿼리
+        String query = "SELECT * FROM review ORDER BY review_id"; // 리뷰 데이터를 가져오는 SQL 쿼리
         try (Connection conn = this.DB_Connect();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(query)) {

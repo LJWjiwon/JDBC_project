@@ -38,7 +38,7 @@ public class DB_Conn_Query {
             restaurantModel.removeRow(i);
         }
 
-        String query = "SELECT * FROM restaurant"; // 음식점 데이터를 가져오는 SQL 쿼리
+        String query = "SELECT * FROM restaurant ORDER BY restaurant_id"; // 음식점 데이터를 가져오는 SQL 쿼리
         try (Connection conn = this.DB_Connect();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(query)) {
@@ -119,7 +119,7 @@ public class DB_Conn_Query {
             customerModel.removeRow(i);
         }
 
-        String query = "SELECT * FROM customer"; // 고객 데이터를 가져오는 SQL 쿼리
+        String query = "SELECT * FROM customer ORDER BY customer_id"; // 고객 데이터를 가져오는 SQL 쿼리
         try (Connection conn = this.DB_Connect();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(query)) {
@@ -148,7 +148,7 @@ public class DB_Conn_Query {
             deliveryModel.removeRow(i);
         }
 
-        String query = "SELECT * FROM delivery_person"; // 배달원 데이터를 가져오는 SQL 쿼리
+        String query = "SELECT * FROM delivery_person ORDER BY delivery_person_id"; // 배달원 데이터를 가져오는 SQL 쿼리
         try (Connection conn = this.DB_Connect();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(query)) {
@@ -175,7 +175,7 @@ public class DB_Conn_Query {
             orderModel.removeRow(i);
         }
 
-        String query = "SELECT * FROM orders"; // 주문 데이터를 가져오는 SQL 쿼리
+        String query = "SELECT * FROM orders ORDER BY order_id"; // 주문 데이터를 가져오는 SQL 쿼리
         try (Connection conn = this.DB_Connect();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(query)) {
@@ -236,7 +236,7 @@ public class DB_Conn_Query {
             allMenuModel.removeRow(i);
         }
 
-        String query = "SELECT * FROM menu"; // 모든 메뉴 데이터를 가져오는 SQL 쿼리
+        String query = "SELECT * FROM menu ORDER BY menu_id"; // 모든 메뉴 데이터를 가져오는 SQL 쿼리
         try (Connection conn = this.DB_Connect();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(query)) {
@@ -523,4 +523,31 @@ public class DB_Conn_Query {
             System.out.println("Error deleting customer: " + e.getMessage());
         }
     }
+
+    // 고객 데이터를 데이터베이스에 저장하는 메서드
+    public void addCustomerToDatabase(String customerId,String customerName, String customerPhone, String customerAddress, String customer_order_count, String customermembership_grad) {
+        String query = "INSERT INTO customer (customer_id, name, phone_number, address, order_count,membership_grade) VALUES (?, ?, ?, ?, ?, ?)";
+
+      try (Connection conn = this.DB_Connect();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+
+            // 입력값 설정
+            pstmt.setString(1, customerId);
+            pstmt.setString(2, customerName);
+            pstmt.setString(3, customerPhone);
+            pstmt.setString(4, customerAddress);
+            pstmt.setString(5, customer_order_count);
+            pstmt.setString(6, customermembership_grad);
+
+
+            // 실행
+            pstmt.executeUpdate();
+            System.out.println("고객이 성공적으로 추가되었습니다.");
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("고객 추가 중 오류가 발생했습니다.");
+        }
+    }
+
 }

@@ -9,6 +9,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.sql.*;
+import java.util.Objects;
 
 public class RestaurantApp extends JFrame {
     private JTabbedPane tabbedPane;
@@ -298,6 +299,7 @@ public class RestaurantApp extends JFrame {
                     String reviewId = reviewModel.getValueAt(selectedRow, 0).toString();
                     String reviewContent = reviewModel.getValueAt(selectedRow, 7).toString();
                     reviewDetailsArea.setText("리뷰 ID: " + reviewId + "\n\n리뷰 내용: " + reviewContent);
+
                 }
             }
         });
@@ -448,7 +450,64 @@ public class RestaurantApp extends JFrame {
                 JOptionPane.showMessageDialog(null, "Please select a customer.", "Error", JOptionPane.WARNING_MESSAGE);
             }
         });
-    }
+
+
+        btn2.addActionListener(e ->  {
+                    // 고객 추가 버튼 클릭 이벤트
+                        // 팝업 창을 띄워서 고객 정보를 입력받기 위한 JTextField 등 사용
+                        JTextField idField = new JTextField(20);
+                        JTextField nameField = new JTextField(20);
+                        JTextField phoneField = new JTextField(20);
+                        JTextField addressField = new JTextField(20);
+                        JTextField order_countField = new JTextField(20);
+                        JTextField Membership_gradField = new JTextField(20);
+
+                        // 팝업 창 생성
+                        JPanel panel = new JPanel();
+                        panel.add(new JLabel("고객ID:"));
+                        panel.add(idField);
+                        panel.add(new JLabel("고객명:"));
+                        panel.add(nameField);
+                        panel.add(new JLabel("전화번호:"));
+                        panel.add(phoneField);
+                        panel.add(new JLabel("주소:"));
+                        panel.add(addressField);
+                         panel.add(new JLabel("주문횟수:"));
+                         panel.add(order_countField);
+                         panel.add(new JLabel("등급:"));
+                         panel.add(Membership_gradField);
+
+                        int option = JOptionPane.showConfirmDialog(null, panel, "새 고객 추가", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+                        if (option == JOptionPane.OK_OPTION) {
+                            String customerId = idField.getText();
+                            String customerName = nameField.getText();
+                            String customerPhone = phoneField.getText();
+                            String customerAddress = addressField.getText();
+                            String customer_order_count = order_countField.getText();
+                            String customermembership_grad = Membership_gradField.getText();
+
+
+                            // 유효성 검사 (예시)
+                            if (customerName.isEmpty() || customerPhone.isEmpty() || customerAddress.isEmpty()) {
+                                JOptionPane.showMessageDialog(null, "모든 필드를 입력해주세요.", "입력 오류", JOptionPane.ERROR_MESSAGE);
+                                return;
+                            }
+
+                            // 테이블에 추가
+                            DefaultTableModel customerModel = (DefaultTableModel) customerTable.getModel();
+                            customerModel.addRow(new Object[]{customerId,customerName, customerPhone, customerAddress, customer_order_count, customermembership_grad});
+
+
+                            // 데이터베이스에 추가
+                            dbConn.addCustomerToDatabase(customerId,customerName, customerPhone, customerAddress, customer_order_count, customermembership_grad);
+
+                            // 성공 메시지
+                            JOptionPane.showMessageDialog(null, "고객이 성공적으로 추가되었습니다.", "성공", JOptionPane.INFORMATION_MESSAGE);
+                        }
+                    });
+
+                }
 
 
 

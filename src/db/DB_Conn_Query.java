@@ -442,6 +442,28 @@ public class DB_Conn_Query {
         }
     }
 
+    // 회원 등급을 업데이트하는 메서드
+    public void updateMembershipGrade(int customerId) {
+        // 프로시저 호출 SQL
+        String sql = "{ CALL update_membership_grade(?) }";
+
+        try (Connection conn = this.DB_Connect();
+             CallableStatement cstmt = conn.prepareCall(sql)) {
+
+            // 프로시저에 고객 ID 전달
+            cstmt.setInt(1, customerId);
+
+            // 프로시저 실행
+            cstmt.execute();
+
+            System.out.println("회원 등급이 성공적으로 업데이트되었습니다.");
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("회원 등급 업데이트 중 오류가 발생했습니다.");
+        }
+    }
+
 
 
 

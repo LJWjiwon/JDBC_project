@@ -13,9 +13,9 @@ import java.util.ArrayList;
 
 public class RestaurantApp extends JFrame {
     private JTabbedPane tabbedPane;
-    private JTable restaurantTable;
-    private DefaultTableModel restaurantModel;
-    private DefaultTableModel menuModel, customerModel, deliveryModel, orderModel, reviewModel, orderDetailModel, allMenuModel;
+    private JTable restaurantTable, allMenuTable;
+    private DefaultTableModel restaurantModel, menuModel;
+    private DefaultTableModel customerModel, deliveryModel, orderModel, reviewModel, orderDetailModel, allMenuModel;
 
     private final DB_Conn_Query dbConn;
 
@@ -184,7 +184,7 @@ public class RestaurantApp extends JFrame {
         JPanel allMenuPanel = new JPanel(new BorderLayout());
         allMenuModel = new DefaultTableModel();
         allMenuModel.setColumnIdentifiers(new Object[]{"메뉴 ID", "음식점 ID", "메뉴 이름", "가격", "설명"});
-        JTable allMenuTable = new JTable(allMenuModel);
+        allMenuTable = new JTable(allMenuModel);
         JScrollPane allMenuScrollPane = new JScrollPane(allMenuTable);
         allMenuPanel.add(allMenuScrollPane, BorderLayout.CENTER);
         allMenuPanel.add(addButtonsPanel("전체 메뉴"), BorderLayout.SOUTH);
@@ -523,8 +523,6 @@ public class RestaurantApp extends JFrame {
             });
 
 
-
-
             // 숫자 입력 영역과 할인 버튼
             JTextField discountField = new JTextField(5); // 입력 필드(숫자 입력)
             JButton applyDiscountButton = new JButton("할인 적용");
@@ -536,11 +534,11 @@ public class RestaurantApp extends JFrame {
             buttonPanel.add(new JLabel("할인율 (%):")); // 입력 필드 앞에 레이블 추가
             buttonPanel.add(discountField);
             buttonPanel.add(applyDiscountButton);
-            //할인율 버튼 클릭 이벤트
+            // 할인 적용 버튼 클릭 시 이벤트 처리
             applyDiscountButton.addActionListener(a -> {
                 try {
                     // 할인율 가져오기
-                    String discountText = discountField.getText();
+                    String discountText = discountField.getText().trim(); // 할인율 입력
                     int discount = Integer.parseInt(discountText);
 
                     // 할인율 유효성 검사
@@ -551,21 +549,52 @@ public class RestaurantApp extends JFrame {
 
                     // 메뉴 모델 데이터에 할인율 적용
                     for (int i = 0; i < menuModel.getRowCount(); i++) {
-                        // 원래 가격 가져오기
-                        float originalPrice = (float) menuModel.getValueAt(i, 2); // 가격 열 (3번째 열)
+                        Boolean isSelected = (Boolean) menuModel.getValueAt(i, 0); // 체크박스 열 확인
+                        if (isSelected != null && isSelected) { // 선택된 메뉴만 처리
+                            String menuName = (String) menuModel.getValueAt(i, 1); // 메뉴 이름
+                            float originalPrice = (float) menuModel.getValueAt(i, 2); // 원래 가격
 
-                        // 할인된 가격 계산
-                        float discountedPrice = originalPrice * (1 - (discount / 100.0f));
+                            // 할인된 가격 계산
+                            float discountedPrice = originalPrice * (1 - (discount / 100.0f));
 
-                        // 테이블에 할인된 가격 설정
-                        menuModel.setValueAt(discountedPrice, i, 2);
+                            // 테이블에 할인된 가격 설정
+                            menuModel.setValueAt(discountedPrice, i, 2);
+
+                            // 데이터베이스에 할인된 가격 업데이트
+                            boolean isUpdated = dbConn.updateMenuPriceByName(menuName, discountedPrice);
+
+                            if (isUpdated) {
+                                System.out.println(menuName + "의 가격이 " + discountedPrice + "로 업데이트되었습니다.");
+                            } else {
+                                System.out.println(menuName + "의 가격 업데이트에 실패했습니다.");
+                            }
+                        }
                     }
 
                     JOptionPane.showMessageDialog(null, "할인율이 적용되었습니다.");
                 } catch (NumberFormatException ex) {
                     JOptionPane.showMessageDialog(null, "유효한 숫자를 입력해주세요.");
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(null, "메뉴 가격 업데이트 중 오류가 발생했습니다.");
                 }
             });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
             // 음식점 탭 버튼 클릭 이벤트 (구현 필요)
             orderButton.addActionListener(e -> JOptionPane.showMessageDialog(this, "주문 버튼 클릭"));
@@ -650,10 +679,12 @@ public class RestaurantApp extends JFrame {
 
 
 
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             RestaurantApp app = new RestaurantApp();
             app.setVisible(true);
         });
     }
+
 }

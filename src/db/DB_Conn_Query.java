@@ -1,8 +1,10 @@
 package db;//import oracle.jdbc.internal.OracleTypes;
+import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import java.awt.*;
 import java.sql.*;
 
-public class DB_Conn_Query {
+public class DB_Conn_Query extends Component {
     Connection con = null;
     String url = "jdbc:oracle:thin:@localhost:1521:XE";
     //String id = "Food_Delivery";
@@ -574,4 +576,30 @@ public class DB_Conn_Query {
             throw new RuntimeException("주문 추가 중 오류 발생: " + e.getMessage());
         }
     }
+
+    // 데이터베이스에서 메뉴 가격을 업데이트하는 메서드
+    public boolean updateMenuPriceByName(String menuName, float discountedPrice) {
+        String updateQuery = "UPDATE menu SET price = ? WHERE name = ?";
+        try (Connection conn = this.DB_Connect();
+             PreparedStatement stmt = conn.prepareStatement(updateQuery)) {
+
+            stmt.setFloat(1, discountedPrice); // 할인된 가격
+            stmt.setString(2, menuName); // 메뉴 이름
+
+            int rowsAffected = stmt.executeUpdate();
+            return rowsAffected > 0; // 업데이트 성공 여부 반환
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+
+
+
+
+
+
+
+
 }

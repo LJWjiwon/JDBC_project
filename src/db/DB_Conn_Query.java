@@ -448,23 +448,18 @@ public class DB_Conn_Query extends Component {
                     updatePstmt.executeUpdate();
                 }
 
-                // 3. 가장 높은 평점을 가진 음식점 계산
-                String topRatedSql = "SELECT restaurant_id FROM restaurant ORDER BY restaurant_rating DESC FETCH FIRST 1 ROWS ONLY";
-                int topRatedRestaurantId = 0;
-                try (PreparedStatement topRatedPstmt = conn.prepareStatement(topRatedSql)) {
-                    ResultSet topRatedRs = topRatedPstmt.executeQuery();
-                    if (topRatedRs.next()) {
-                        topRatedRestaurantId = topRatedRs.getInt(1);
-                    }
-                }
+                // 3. 전체 음식점의 'top_rated_restaurant' 플래그 업데이트
+                String updateTopRatedFlagSql =
+                        "UPDATE restaurant " +
+                                "SET top_rated_restaurant = CASE " +
+                                "    WHEN restaurant_rating = (SELECT MAX(restaurant_rating) FROM restaurant) THEN 'Y' " +
+                                "    ELSE 'N' " +
+                                "END";
 
-                // 4. 가장 높은 평점을 가진 음식점에 'TOP_RATED_RESTAURANT' 플래그 설정
-                String updateTopRatedFlagSql = "UPDATE restaurant SET top_rated_restaurant = ? WHERE restaurant_id = ?";
                 try (PreparedStatement updateTopRatedPstmt = conn.prepareStatement(updateTopRatedFlagSql)) {
-                    updateTopRatedPstmt.setString(1, (topRatedRestaurantId == restaurantId) ? "Y" : "N");
-                    updateTopRatedPstmt.setInt(2, restaurantId);
                     updateTopRatedPstmt.executeUpdate();
                 }
+
 
                 // 5. 트랜잭션 커밋
                 conn.commit();
@@ -560,8 +555,8 @@ public class DB_Conn_Query extends Component {
 
             // 고객 ID는 실제로 선택된 고객의 ID로 처리되어야 합니다.
             // 예시로 1번 고객 ID를 사용 (이 부분은 실제로 구현 시, 로그인된 고객의 ID로 바꿔야 합니다)
-            int customerId = 1;  // 예시로 1번 고객 ID 설정
-            int deliveryPersonId = 1;   // 예시로 1번 배달원 ID 설정
+            int customerId = 3;  // 예시로 1번 고객 ID 설정
+            int deliveryPersonId = 3;   // 예시로 1번 배달원 ID 설정
 
             stmt.setInt(1, customerId); // 고객 ID
             stmt.setInt(2, restaurantId); // 음식점 ID
@@ -574,6 +569,7 @@ public class DB_Conn_Query extends Component {
             e.printStackTrace();
             throw new RuntimeException("주문 추가 중 오류 발생: " + e.getMessage());
         }
+
     }
 
     // 데이터베이스에서 메뉴 가격을 업데이트하는 메서드
@@ -709,10 +705,75 @@ public class DB_Conn_Query extends Component {
         }
     }
 
+    public void updateReviewInDatabase(String reviewId, String orderId, String customerId, String restaurantId,
+                                      String deliveryPersonId, String restaurantRating, String deliveryPersonRating,
+                                      String reviewContent) {
+        String query = "UPDATE review SET order_id = ?, customer_id = ?, restaurant_id = ?, delivery_person_id = ?, " +
+                "restaurant_rating = ?, delivery_person_rating = ?, review_content = ? WHERE review_id = ?";
+
+        try (Connection conn = this.DB_Connect();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+
+            // 쿼리 파라미터 설정
+            pstmt.setString(1, orderId);
+            pstmt.setString(2, customerId);
+            pstmt.setString(3, restaurantId);
+            pstmt.setString(4, deliveryPersonId);
+            pstmt.setString(5, restaurantRating);
+            pstmt.setString(6, deliveryPersonRating);
+            pstmt.setString(7, reviewContent);
+            pstmt.setString(8, reviewId);
+
+            // 쿼리 실행
+            pstmt.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("리뷰 수정 중 오류가 발생했습니다.");
+        }
+    }
+
+    public void deleteReviewFromDatabase(String reviewId) {
+        String query = "DELETE FROM review WHERE review_id = ?";
+
+        try (Connection conn = this.DB_Connect();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+
+            // 쿼리 파라미터 설정
+            pstmt.setString(1, reviewId);
+
+            // 쿼리 실행
+            pstmt.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("리뷰 삭제 중 오류가 발생했습니다.");
+        }
+    }
 
 
+    // 최고 평점을 가진 음식점 정보를 하나의 문자열로 반환
+    public String getTopRatedRestaurantInfo() {
+        StringBuilder result = new StringBuilder();
+        String query = "SELECT name, restaurant_rating " +
+                "FROM restaurant " +
+                "WHERE restaurant_rating = (SELECT MAX(restaurant_rating) FROM restaurant)";
 
+        try (Connection conn = this.DB_Connect();
+             PreparedStatement pstmt = conn.prepareStatement(query);
+             ResultSet rs = pstmt.executeQuery()) {
 
+            while (rs.next()) {
+                String name = rs.getString("name");
+                double rating = rs.getDouble("restaurant_rating");
+                result.append(String.format("- %s (평점: %.2f)\n", name, rating));
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+
+        return result.toString().isEmpty() ? null : result.toString();
+    }
 
 
 }

@@ -437,6 +437,80 @@ public class RestaurantApp extends JFrame {
                 JOptionPane.showMessageDialog(null, "고객이 성공적으로 추가되었습니다.", "성공", JOptionPane.INFORMATION_MESSAGE);
             }
         });
+        btn3.addActionListener(e -> {
+            // 고객 수정 버튼 클릭 이벤트
+            // 선택된 고객 정보를 테이블에서 가져오기
+            int selectedRow = customerTable.getSelectedRow();
+
+            // 고객이 선택되지 않은 경우
+            if (selectedRow == -1) {
+                JOptionPane.showMessageDialog(null, "수정할 고객을 선택해주세요.", "선택 오류", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // 선택된 고객의 기존 정보 가져오기
+            String customerId = customerTable.getValueAt(selectedRow, 0).toString();
+            String customerName = customerTable.getValueAt(selectedRow, 1).toString();
+            String customerPhone = customerTable.getValueAt(selectedRow, 2).toString();
+            String customerAddress = customerTable.getValueAt(selectedRow, 3).toString();
+            String customerOrderCount = customerTable.getValueAt(selectedRow, 4).toString();
+            String customerMembershipGrade = customerTable.getValueAt(selectedRow, 5).toString();
+
+            // 팝업 창을 띄워서 고객 정보를 수정하기 위한 JTextField 등 사용
+            JTextField idField = new JTextField(customerId, 20);
+            JTextField nameField = new JTextField(customerName, 20);
+            JTextField phoneField = new JTextField(customerPhone, 20);
+            JTextField addressField = new JTextField(customerAddress, 20);
+            JTextField orderCountField = new JTextField(customerOrderCount, 20);
+            JTextField membershipGradeField = new JTextField(customerMembershipGrade, 20);
+
+            // 팝업 창 생성
+            JPanel panel = new JPanel();
+            panel.add(new JLabel("고객ID:"));
+            panel.add(idField);
+            panel.add(new JLabel("고객명:"));
+            panel.add(nameField);
+            panel.add(new JLabel("전화번호:"));
+            panel.add(phoneField);
+            panel.add(new JLabel("주소:"));
+            panel.add(addressField);
+            panel.add(new JLabel("주문횟수:"));
+            panel.add(orderCountField);
+            panel.add(new JLabel("등급:"));
+            panel.add(membershipGradeField);
+
+            int option = JOptionPane.showConfirmDialog(null, panel, "고객 정보 수정", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+            if (option == JOptionPane.OK_OPTION) {
+                // 수정된 고객 정보 가져오기
+                String newCustomerId = idField.getText();
+                String newCustomerName = nameField.getText();
+                String newCustomerPhone = phoneField.getText();
+                String newCustomerAddress = addressField.getText();
+                String newCustomerOrderCount = orderCountField.getText();
+                String newCustomerMembershipGrade = membershipGradeField.getText();
+
+                // 유효성 검사 (예시)
+                if (newCustomerName.isEmpty() || newCustomerPhone.isEmpty() || newCustomerAddress.isEmpty()) {
+                    JOptionPane.showMessageDialog(null, "모든 필드를 입력해주세요.", "입력 오류", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                // 테이블의 데이터 수정
+                customerTable.setValueAt(newCustomerId, selectedRow, 0);
+                customerTable.setValueAt(newCustomerName, selectedRow, 1);
+                customerTable.setValueAt(newCustomerPhone, selectedRow, 2);
+                customerTable.setValueAt(newCustomerAddress, selectedRow, 3);
+                customerTable.setValueAt(newCustomerOrderCount, selectedRow, 4);
+                customerTable.setValueAt(newCustomerMembershipGrade, selectedRow, 5);
+
+                // 데이터베이스에 수정된 내용 반영
+                dbConn.updateCustomerInDatabase(newCustomerId, newCustomerName, newCustomerPhone, newCustomerAddress, newCustomerOrderCount, newCustomerMembershipGrade);
+
+                // 성공 메시지
+                JOptionPane.showMessageDialog(null, "고객 정보가 성공적으로 수정되었습니다.", "성공", JOptionPane.INFORMATION_MESSAGE);
+            }
+        });
 
 
     }

@@ -7,8 +7,8 @@ import java.sql.*;
 public class DB_Conn_Query extends Component {
     Connection con = null;
     String url = "jdbc:oracle:thin:@localhost:1521:XE";
-    //String id = "Food_Delivery";
-    String id = "Hmart";
+    String id = "Food_Delivery";
+    //String id = "Hmart";
     String password = "1234";
 
     public DB_Conn_Query() {
@@ -592,6 +592,34 @@ public class DB_Conn_Query extends Component {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public void updateCustomerInDatabase(String customerId, String customerName, String customerPhone, String customerAddress, String customer_order_count, String customermembership_grad) {
+        String query = "UPDATE customer SET name = ?, phone_number = ?, address = ?, order_count = ?, membership_grade = ? WHERE customer_id = ?";
+
+        try (Connection conn = this.DB_Connect();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+
+            // 수정할 값 설정
+            pstmt.setString(1, customerName); // 이름
+            pstmt.setString(2, customerPhone); // 전화번호
+            pstmt.setString(3, customerAddress); // 주소
+            pstmt.setString(4, customer_order_count); // 주문 횟수
+            pstmt.setString(5, customermembership_grad); // 멤버십 등급
+            pstmt.setString(6, customerId); // 고객 ID (수정하려는 고객)
+
+            // 실행
+            int rowsUpdated = pstmt.executeUpdate();
+            if (rowsUpdated > 0) {
+                System.out.println("고객 정보가 성공적으로 수정되었습니다.");
+            } else {
+                System.out.println("해당 고객 ID에 해당하는 정보가 없습니다.");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("고객 정보 수정 중 오류가 발생했습니다.");
+        }
     }
 
 

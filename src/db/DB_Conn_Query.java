@@ -1,5 +1,4 @@
 package db;//import oracle.jdbc.internal.OracleTypes;
-import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.sql.*;
@@ -7,8 +6,8 @@ import java.sql.*;
 public class DB_Conn_Query extends Component {
     Connection con = null;
     String url = "jdbc:oracle:thin:@localhost:1521:XE";
-    String id = "Food_Delivery";
-    //String id = "Hmart";
+    //String id = "Food_Delivery";
+    String id = "Hmart";
     String password = "1234";
 
     public DB_Conn_Query() {
@@ -622,7 +621,93 @@ public class DB_Conn_Query extends Component {
         }
     }
 
+    public int addDeliveryPersonToDatabase(String name, String phone, float rating) {
+        String query = "INSERT INTO delivery_person (delivery_person_id, name, phone_number, delivery_person_rating) " +
+                "VALUES (delivery_person_seq.NEXTVAL, ?, ?, ?)";
 
+        try (Connection conn = this.DB_Connect();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+
+            // 입력값 설정
+            pstmt.setString(1, name); // 배달원 이름
+            pstmt.setString(2, phone); // 배달원 전화번호
+            pstmt.setFloat(3, rating); // 배달원 평점
+
+            // 실행
+            int rowsAffected = pstmt.executeUpdate();
+            if (rowsAffected > 0) {
+                // 성공적으로 추가된 경우
+                System.out.println("배달원이 성공적으로 추가되었습니다.");
+
+                // 최근에 추가된 배달원의 ID를 가져오기
+                String getIdQuery = "SELECT delivery_person_seq.CURRVAL FROM dual";
+                try (PreparedStatement stmt = conn.prepareStatement(getIdQuery);
+                     ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        int generatedId = rs.getInt(1);  // 생성된 배달원 ID 가져오기
+                        System.out.println("생성된 배달원 ID: " + generatedId);
+                        return generatedId;  // 생성된 배달원 ID 반환
+                    }
+                }
+            } else {
+                System.out.println("배달원 추가에 실패했습니다.");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("배달원 추가 중 오류가 발생했습니다.");
+        }
+        return -1;  // 실패한 경우 -1 반환
+    }
+
+
+
+
+
+    public void updateDeliveryPersonInDatabase(String deliveryPersonId, String name, String phone, String rating) {
+        String query = "UPDATE delivery_person SET name = ?, phone_number = ?, delivery_person_rating = ? WHERE delivery_person_id = ?";
+
+        try (Connection conn = this.DB_Connect();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+
+            pstmt.setString(1, name);
+            pstmt.setString(2, phone);
+            pstmt.setString(3, rating);
+            pstmt.setString(4, deliveryPersonId);
+
+            int rowsUpdated = pstmt.executeUpdate();
+            if (rowsUpdated > 0) {
+                System.out.println("배달원 정보가 성공적으로 수정되었습니다.");
+            } else {
+                System.out.println("해당 배달원 ID를 찾을 수 없습니다.");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("배달원 정보 수정 중 오류가 발생했습니다.");
+        }
+    }
+
+    public void deleteDeliveryPersonInDatabase(String deliveryPersonId) {
+        String query = "DELETE FROM delivery_person WHERE delivery_person_id = ?";
+
+        try (Connection conn = this.DB_Connect();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+
+            pstmt.setString(1, deliveryPersonId);
+
+            int rowsDeleted = pstmt.executeUpdate();
+            if (rowsDeleted > 0) {
+                System.out.println("배달원이 성공적으로 삭제되었습니다.");
+            } else {
+                System.out.println("해당 배달원 ID를 찾을 수 없습니다.");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("배달원 삭제 중 오류가 발생했습니다.");
+        }
+    }
 
 
 

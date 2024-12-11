@@ -512,6 +512,149 @@ public class RestaurantApp extends JFrame {
             }
         });
 
+        // 배달원 전용 버튼 패널 추가
+        JPanel deliveryButtonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JButton addButton = new JButton("추가");
+        JButton editButton = new JButton("수정");
+        JButton deleteButton = new JButton("삭제");
+
+        deliveryButtonPanel.add(addButton);
+        deliveryButtonPanel.add(editButton);
+        deliveryButtonPanel.add(deleteButton);
+        deliveryPanel.add(deliveryButtonPanel, BorderLayout.SOUTH);
+
+        addButton.addActionListener(e -> {
+            // 배달원 추가를 위한 입력 필드 생성
+            JTextField nameField = new JTextField(20);
+            JTextField phoneField = new JTextField(20);
+            JTextField ratingField = new JTextField(20);
+
+            // 입력 필드가 포함된 패널 생성
+            JPanel panel = new JPanel();
+            panel.add(new JLabel("배달원 이름:"));
+            panel.add(nameField);
+            panel.add(new JLabel("전화번호:"));
+            panel.add(phoneField);
+            panel.add(new JLabel("평점:"));
+            panel.add(ratingField);
+
+            // 팝업 창을 사용하여 배달원 정보를 입력받음
+            int option = JOptionPane.showConfirmDialog(this, panel, "배달원 추가", JOptionPane.OK_CANCEL_OPTION);
+
+            // OK 버튼을 클릭한 경우
+            if (option == JOptionPane.OK_OPTION) {
+                // 입력된 값 가져오기
+                String name = nameField.getText();
+                String phone = phoneField.getText();
+                String ratingText = ratingField.getText();
+
+                // 유효성 검사
+                if (name.isEmpty() || phone.isEmpty() || ratingText.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "모든 필드를 입력해주세요.", "입력 오류", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                // 평점은 숫자여야 하므로 숫자 유효성 검사
+                try {
+                    float rating = Float.parseFloat(ratingText);
+
+                    // 평점 유효성 검사 (예시: 1~5 범위로 설정)
+                    if (rating < 1 || rating > 5) {
+                        JOptionPane.showMessageDialog(this, "평점은 1부터 5까지 입력해주세요.", "평점 오류", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+
+                    // 배달원 추가 메서드 호출
+                    int newDeliveryPersonId = dbConn.addDeliveryPersonToDatabase(name, phone, rating);
+
+                    if (newDeliveryPersonId != -1) {
+                        // 배달원 추가가 성공적으로 이루어진 경우
+                        JOptionPane.showMessageDialog(this, "배달원이 추가되었습니다. 배달원 ID: " + newDeliveryPersonId);
+
+                        // 배달원 목록 테이블 갱신 (테이블 데이터 갱신)
+                        dbConn.loadDeliveryData(deliveryModel); // 배달원 데이터 새로 로드
+
+                    } else {
+                        JOptionPane.showMessageDialog(this, "배달원 추가에 실패했습니다.");
+                    }
+
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(this, "평점은 숫자로 입력해야 합니다.", "입력 오류", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
+
+
+        // 배달원 수정 버튼 이벤트
+        editButton.addActionListener(e -> {
+            int selectedRow = deliveryTable.getSelectedRow();
+            if (selectedRow == -1) {
+                JOptionPane.showMessageDialog(this, "수정할 배달원을 선택하세요.", "선택 오류", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // 선택된 배달원 정보 가져오기
+            String deliveryPersonId = deliveryTable.getValueAt(selectedRow, 0).toString();
+            String name = deliveryTable.getValueAt(selectedRow, 1).toString();
+            String phoneNumber = deliveryTable.getValueAt(selectedRow, 2).toString();
+            String rating = deliveryTable.getValueAt(selectedRow, 3).toString();
+
+            // 입력 필드 준비
+            JTextField nameField = new JTextField(name, 20);
+            JTextField phoneField = new JTextField(phoneNumber, 20);
+            JTextField ratingField = new JTextField(rating, 20);
+
+            JPanel panel = new JPanel();
+            panel.add(new JLabel("이름:"));
+            panel.add(nameField);
+            panel.add(new JLabel("전화번호:"));
+            panel.add(phoneField);
+            panel.add(new JLabel("평점:"));
+            panel.add(ratingField);
+
+            // 수정 다이얼로그 띄우기
+            int option = JOptionPane.showConfirmDialog(this, panel, "배달원 정보 수정", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+            if (option == JOptionPane.OK_OPTION) {
+                String newName = nameField.getText();
+                String newPhone = phoneField.getText();
+                String newRating = ratingField.getText();
+
+                // 데이터베이스 업데이트 호출
+                dbConn.updateDeliveryPersonInDatabase(deliveryPersonId, newName, newPhone, newRating);
+
+                // 테이블 데이터 갱신
+                deliveryTable.setValueAt(newName, selectedRow, 1);
+                deliveryTable.setValueAt(newPhone, selectedRow, 2);
+                deliveryTable.setValueAt(newRating, selectedRow, 3);
+
+                JOptionPane.showMessageDialog(this, "배달원 정보가 성공적으로 수정되었습니다.");
+            }
+        });
+
+// 배달원 삭제 버튼 이벤트
+        deleteButton.addActionListener(e -> {
+            int selectedRow = deliveryTable.getSelectedRow();
+            if (selectedRow == -1) {
+                JOptionPane.showMessageDialog(this, "삭제할 배달원을 선택하세요.", "선택 오류", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            String deliveryPersonId = deliveryTable.getValueAt(selectedRow, 0).toString();
+
+            // 삭제 확인 다이얼로그
+            int confirm = JOptionPane.showConfirmDialog(this, "정말 삭제하시겠습니까?", "확인", JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                // 데이터베이스 삭제 호출
+                dbConn.deleteDeliveryPersonInDatabase(deliveryPersonId);
+
+                // 테이블에서 행 제거
+                deliveryModel.removeRow(selectedRow);
+                JOptionPane.showMessageDialog(this, "배달원이 삭제되었습니다.");
+            }
+        });
+
+
 
     }
 

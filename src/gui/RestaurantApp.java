@@ -119,9 +119,11 @@ public class RestaurantApp extends JFrame {
         JPanel buttonPanel_review = new JPanel(new FlowLayout(FlowLayout.CENTER));
         JButton button_a = new JButton("리뷰 작성");
         JButton button_b = new JButton("수정");
+        JButton button_c = new JButton("삭제");
 
         buttonPanel_review.add(button_a);
         buttonPanel_review.add(button_b);
+        buttonPanel_review.add(button_c);
 
         // 버튼 패널을 orderPanel의 아래쪽에 추가
         orderPanel.add(buttonPanel_review, BorderLayout.SOUTH);  // 버튼이 아래쪽에 보이게
@@ -206,6 +208,36 @@ public class RestaurantApp extends JFrame {
         dbConn.loadOrderData(orderModel);
         dbConn.loadReviewData(reviewModel);
         dbConn.loadAllMenuData(allMenuModel); // 전체 메뉴 데이터 로드
+
+        // 탭 변경 이벤트 리스너 추가
+        tabbedPane.addChangeListener(e -> {
+            int selectedIndex = tabbedPane.getSelectedIndex();
+            String selectedTabTitle = tabbedPane.getTitleAt(selectedIndex); // 현재 선택된 탭 이름 가져오기
+            // 탭 이름에 따라 데이터 로드 함수 호출
+            switch (selectedTabTitle) {
+                case "음식점":
+                    dbConn.loadRestaurantData(restaurantModel);
+                    break;
+                case "고객":
+                    dbConn.loadCustomerData(customerModel);
+                    break;
+                case "배달원":
+                    dbConn.loadDeliveryData(deliveryModel);
+                    break;
+                case "주문":
+                    dbConn.loadOrderData(orderModel);
+                    break;
+                case "리뷰":
+                    dbConn.loadReviewData(reviewModel);
+                    break;
+                case "전체 메뉴":
+                    dbConn.loadAllMenuData(allMenuModel); // 전체 메뉴 데이터 로드
+                    break;
+                default:
+                    System.out.println("Unknown tab selected: " + selectedTabTitle);
+                    break;
+            }
+        });
 
         // 음식점 선택 시 메뉴 데이터 로드
         restaurantTable.getSelectionModel().addListSelectionListener(e -> {
@@ -511,6 +543,31 @@ public class RestaurantApp extends JFrame {
                 JOptionPane.showMessageDialog(null, "고객 정보가 성공적으로 수정되었습니다.", "성공", JOptionPane.INFORMATION_MESSAGE);
             }
         });
+
+        btn4.addActionListener(e -> {
+            int selectedRow = customerTable.getSelectedRow();
+            if (selectedRow != -1) {
+                try {
+                    // 선택된 행의 고객 ID를 가져옴
+                    int customerId = (Integer) customerModel.getValueAt(selectedRow, 0);
+                    // 데이터베이스에서 고객 삭제
+                    DB_Conn_Query customerService = new DB_Conn_Query();
+                    customerService.deleteCustomer(customerId);
+                    // 테이블 모델에서 해당 행 삭제
+                    customerModel.removeRow(selectedRow);
+                    // 성공 메시지 표시
+                    JOptionPane.showMessageDialog(null, "Customer deleted successfully.", "Success", JOptionPane.INFORMATION_MESSAGE);
+                } catch (Exception ex) {
+                    // 오류 발생 시 메시지 표시
+                    JOptionPane.showMessageDialog(null, "An error occurred: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } else {
+                // 선택된 고객이 없을 경우 메시지 표시
+                JOptionPane.showMessageDialog(null, "Please select a customer.", "Error", JOptionPane.WARNING_MESSAGE);
+            }
+        });
+
+
 
         // 배달원 전용 버튼 패널 추가
         JPanel deliveryButtonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
@@ -846,32 +903,6 @@ public class RestaurantApp extends JFrame {
                     JOptionPane.showMessageDialog(this, "유효한 숫자를 입력하세요.");
                 }
             });
-//        }else if ("고객".equals(tabName)) {
-//            JButton updateMembershipButton = new JButton("회원 등급 업데이트");
-//
-//            // 고객 탭 전용 버튼 추가
-//            buttonPanel.add(updateMembershipButton);
-
-//            // 고객 탭 버튼 클릭 이벤트
-//            updateMembershipButton.addActionListener(e -> {
-//                // 선택된 행의 인덱스를 가져옴
-//                int selectedRow = customerTable.getSelectedRow(); // JTable에서 선택된 행 인덱스 가져오기
-//
-//                if (selectedRow != -1) { // 선택된 행이 있을 경우
-//                    // 고객 ID 가져오기 (고객 ID는 첫 번째 컬럼에 있다고 가정)
-//                    int customerId = (Integer) customerModel.getValueAt(selectedRow, 0); // 첫 번째 컬럼에서 고객 ID 가져오기
-//
-//                    // 회원 등급 업데이트 프로시저 호출
-//                    CustomerService customerService = new CustomerService();
-//                    customerService.updateMembershipGrade(customerId);
-//
-//                    // 사용자에게 성공 메시지 표시
-//                    showAlert("Success", "Membership grade updated successfully.");
-//                } else {
-//                    // 선택된 고객이 없을 경우 오류 메시지 표시
-//                    showAlert("Error", "Please select a customer.");
-//                }
-//            });
 
         }
 

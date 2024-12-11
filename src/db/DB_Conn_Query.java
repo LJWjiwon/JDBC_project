@@ -6,8 +6,8 @@ import java.sql.*;
 public class DB_Conn_Query extends Component {
     Connection con = null;
     String url = "jdbc:oracle:thin:@localhost:1521:XE";
-    //String id = "Food_Delivery";
-    String id = "Hmart";
+    String id = "Food_Delivery";
+//    String id = "Hmart";
     String password = "1234";
 
     public DB_Conn_Query() {
